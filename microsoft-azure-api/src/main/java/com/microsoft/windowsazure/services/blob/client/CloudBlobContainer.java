@@ -617,7 +617,7 @@ public final class CloudBlobContainer {
                 final String aclString = ContainerResponse.getAcl(request);
                 final BlobContainerPermissions containerAcl = getContainerAcl(aclString);
 
-                final AccessPolicyResponse response = new AccessPolicyResponse(request.getInputStream());
+                final BlobAccessPolicyResponse response = new BlobAccessPolicyResponse(request.getInputStream());
 
                 for (final String key : response.getAccessIdentifiers().keySet()) {
                     containerAcl.getSharedAccessPolicies().put(key, response.getAccessIdentifiers().get(key));
@@ -723,7 +723,7 @@ public final class CloudBlobContainer {
      * <li>The time at which it expires.</li>
      * <li>The permissions that it grants.</li>
      * </ul>
-     * These parameters are specified in an access policy, represented by the {@link SharedAccessPolicy} class. There
+     * These parameters are specified in an access policy, represented by the {@link SharedAccessBlobPolicy} class. There
      * are two ways to specify an access policy:
      * <ul>
      * <li>
@@ -755,7 +755,7 @@ public final class CloudBlobContainer {
      * @throws StorageException
      *             If a storage service error occurred.
      */
-    public String generateSharedAccessSignature(final SharedAccessPolicy policy) throws InvalidKeyException,
+    public String generateSharedAccessSignature(final SharedAccessBlobPolicy policy) throws InvalidKeyException,
             StorageException {
         return this.generateSharedAccessSignature(policy, null);
     }
@@ -776,7 +776,7 @@ public final class CloudBlobContainer {
      * <li>The time at which it expires.</li>
      * <li>The permissions that it grants.</li>
      * </ul>
-     * These parameters are specified in an access policy, represented by the {@link SharedAccessPolicy} class. There
+     * These parameters are specified in an access policy, represented by the {@link SharedAccessBlobPolicy} class. There
      * are two ways to specify an access policy:
      * <ul>
      * <li>
@@ -812,7 +812,7 @@ public final class CloudBlobContainer {
      * @throws StorageException
      *             If a storage service error occurred.
      */
-    public String generateSharedAccessSignature(final SharedAccessPolicy policy, OperationContext opContext)
+    public String generateSharedAccessSignature(final SharedAccessBlobPolicy policy, OperationContext opContext)
             throws InvalidKeyException, StorageException {
         if (opContext == null) {
             opContext = new OperationContext();
@@ -837,7 +837,7 @@ public final class CloudBlobContainer {
      * <li>The time at which it expires.</li>
      * <li>The permissions that it grants.</li>
      * </ul>
-     * These parameters are specified in an access policy, represented by the {@link SharedAccessPolicy} class. There
+     * These parameters are specified in an access policy, represented by the {@link SharedAccessBlobPolicy} class. There
      * are two ways to specify an access policy:
      * <ul>
      * <li>
@@ -889,7 +889,7 @@ public final class CloudBlobContainer {
      * <li>The time at which it expires.</li>
      * <li>The permissions that it grants.</li>
      * </ul>
-     * These parameters are specified in an access policy, represented by the {@link SharedAccessPolicy} class. There
+     * These parameters are specified in an access policy, represented by the {@link SharedAccessBlobPolicy} class. There
      * are two ways to specify an access policy:
      * <ul>
      * <li>
@@ -945,7 +945,7 @@ public final class CloudBlobContainer {
      * @throws StorageException
      * @throws IllegalArgumentException
      */
-    private String generateSharedAccessSignatureCore(final SharedAccessPolicy policy,
+    private String generateSharedAccessSignatureCore(final SharedAccessBlobPolicy policy,
             final String groupPolicyIdentifier, OperationContext opContext) throws InvalidKeyException,
             StorageException {
         if (opContext == null) {

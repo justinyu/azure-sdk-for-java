@@ -1295,7 +1295,7 @@ public abstract class CloudBlob implements ListBlobItem {
      * @throws StorageException
      *             If a storage service error occurred.
      */
-    public final String generateSharedAccessSignature(final SharedAccessPolicy policy) throws InvalidKeyException,
+    public final String generateSharedAccessSignature(final SharedAccessBlobPolicy policy) throws InvalidKeyException,
             StorageException {
         return this.generateSharedAccessSignature(policy, null);
     }
@@ -1321,7 +1321,7 @@ public abstract class CloudBlob implements ListBlobItem {
      * @throws StorageException
      *             If a storage service error occurred.
      */
-    public final String generateSharedAccessSignature(final SharedAccessPolicy policy, OperationContext opContext)
+    public final String generateSharedAccessSignature(final SharedAccessBlobPolicy policy, OperationContext opContext)
             throws InvalidKeyException, StorageException {
         if (opContext == null) {
             opContext = new OperationContext();
@@ -1403,7 +1403,7 @@ public abstract class CloudBlob implements ListBlobItem {
      * @throws StorageException
      *             If a storage service error occurred.
      */
-    private String generateSharedAccessSignatureCore(final SharedAccessPolicy policy,
+    private String generateSharedAccessSignatureCore(final SharedAccessBlobPolicy policy,
             final String groupPolicyIdentifier, OperationContext opContext) throws InvalidKeyException,
             StorageException {
         if (opContext == null) {

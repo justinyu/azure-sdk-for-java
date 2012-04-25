@@ -64,11 +64,6 @@ final class BlobConstants {
     }
 
     /**
-     * XML element for an access policy.
-     */
-    public static final String ACCESS_POLICY = "AccessPolicy";
-
-    /**
      * XML element for authentication error details.
      */
     public static final String AUTHENTICATION_ERROR_DETAIL = "AuthenticationErrorDetail";
@@ -220,11 +215,6 @@ final class BlobConstants {
     public static final String LATEST_ELEMENT = "Latest";
 
     /**
-     * Maximum number of shared access policy identifiers supported by server.
-     */
-    public static final int MAX_SHARED_ACCESS_POLICY_IDENTIFIERS = 5;
-
-    /**
      * The maximum size, in bytes, of a blob before it must be separated into blocks
      */
     // Note if this is updated then Constants.MAX_MARK_LENGTH needs to be as well.
@@ -276,16 +266,6 @@ final class BlobConstants {
      */
     public static final String SEQUENCE_NUMBER = com.microsoft.windowsazure.services.core.storage.Constants.PREFIX_FOR_STORAGE_HEADER
             + "blob-sequence-number";
-
-    /**
-     * XML element for a signed identifier.
-     */
-    public static final String SIGNED_IDENTIFIER_ELEMENT = "SignedIdentifier";
-
-    /**
-     * XML element for signed identifiers.
-     */
-    public static final String SIGNED_IDENTIFIERS_ELEMENT = "SignedIdentifiers";
 
     /**
      * The header for the blob content length.

@@ -467,6 +467,26 @@ public final class Constants {
     public static final String URL_ELEMENT = "Url";
 
     /**
+     * XML element for a signed identifier.
+     */
+    public static final String SIGNED_IDENTIFIER_ELEMENT = "SignedIdentifier";
+
+    /**
+     * XML element for signed identifiers.
+     */
+    public static final String SIGNED_IDENTIFIERS_ELEMENT = "SignedIdentifiers";
+
+    /**
+     * XML element for an access policy.
+     */
+    public static final String ACCESS_POLICY = "AccessPolicy";
+
+    /**
+     * Maximum number of shared access policy identifiers supported by server.
+     */
+    public static final int MAX_SHARED_ACCESS_POLICY_IDENTIFIERS = 5;
+
+    /**
      * Private Default Ctor
      */
     private Constants() {

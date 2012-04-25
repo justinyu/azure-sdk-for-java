@@ -330,7 +330,7 @@ final class ContainerRequest {
      * @throws XMLStreamException
      */
     public static void writeSharedAccessIdentifiersToStream(
-            final HashMap<String, SharedAccessPolicy> sharedAccessPolicies, final StringWriter outWriter)
+            final HashMap<String, SharedAccessBlobPolicy> sharedAccessPolicies, final StringWriter outWriter)
             throws XMLStreamException {
         Utility.assertNotNull("sharedAccessPolicies", sharedAccessPolicies);
         Utility.assertNotNull("outWriter", outWriter);
@@ -338,28 +338,28 @@ final class ContainerRequest {
         final XMLOutputFactory xmlOutFactoryInst = XMLOutputFactory.newInstance();
         final XMLStreamWriter xmlw = xmlOutFactoryInst.createXMLStreamWriter(outWriter);
 
-        if (sharedAccessPolicies.keySet().size() > BlobConstants.MAX_SHARED_ACCESS_POLICY_IDENTIFIERS) {
+        if (sharedAccessPolicies.keySet().size() > Constants.MAX_SHARED_ACCESS_POLICY_IDENTIFIERS) {
             final String errorMessage = String
                     .format("Too many %d shared access policy identifiers provided. Server does not support setting more than %d on a single container.",
-                            sharedAccessPolicies.keySet().size(), BlobConstants.MAX_SHARED_ACCESS_POLICY_IDENTIFIERS);
+                            sharedAccessPolicies.keySet().size(), Constants.MAX_SHARED_ACCESS_POLICY_IDENTIFIERS);
 
             throw new IllegalArgumentException(errorMessage);
         }
 
         // default is UTF8
         xmlw.writeStartDocument();
-        xmlw.writeStartElement(BlobConstants.SIGNED_IDENTIFIERS_ELEMENT);
+        xmlw.writeStartElement(Constants.SIGNED_IDENTIFIERS_ELEMENT);
 
-        for (final Entry<String, SharedAccessPolicy> entry : sharedAccessPolicies.entrySet()) {
-            final SharedAccessPolicy policy = entry.getValue();
-            xmlw.writeStartElement(BlobConstants.SIGNED_IDENTIFIER_ELEMENT);
+        for (final Entry<String, SharedAccessBlobPolicy> entry : sharedAccessPolicies.entrySet()) {
+            final SharedAccessBlobPolicy policy = entry.getValue();
+            xmlw.writeStartElement(Constants.SIGNED_IDENTIFIER_ELEMENT);
 
             // Set the identifier
             xmlw.writeStartElement(Constants.ID);
             xmlw.writeCharacters(entry.getKey());
             xmlw.writeEndElement();
 
-            xmlw.writeStartElement(BlobConstants.ACCESS_POLICY);
+            xmlw.writeStartElement(Constants.ACCESS_POLICY);
 
             // Set the Start Time
             xmlw.writeStartElement(BlobConstants.START);
@@ -375,7 +375,7 @@ final class ContainerRequest {
 
             // Set the Permissions
             xmlw.writeStartElement(BlobConstants.PERMISSION);
-            xmlw.writeCharacters(SharedAccessPolicy.permissionsToString(policy.getPermissions()));
+            xmlw.writeCharacters(SharedAccessBlobPolicy.permissionsToString(policy.getPermissions()));
             // end Permission
             xmlw.writeEndElement();
 

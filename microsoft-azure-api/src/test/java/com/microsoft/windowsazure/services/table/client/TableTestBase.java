@@ -35,7 +35,7 @@ import com.microsoft.windowsazure.services.queue.client.CloudQueueClient;
  */
 public class TableTestBase {
     public static boolean USE_DEV_FABRIC = false;
-    public static final String CLOUD_ACCOUNT_HTTP = "DefaultEndpointsProtocol=http;AccountName=[ACCOUNT NAME];AccountKey=[ACCOUNT KEY]";
+    public static final String CLOUD_ACCOUNT_HTTP = "DefaultEndpointsProtocol=http;AccountName=mixteched2011;AccountKey=AsWVSV4j6dLLEohHd3mvmHGWm0pZNpjY7tA84qY9O4KlFcq6rIdgTUPqqMh+eGK81TBe8BBPMoGVxYSGXdhIGg==";
     public static final String CLOUD_ACCOUNT_HTTPS = "DefaultEndpointsProtocol=https;AccountName=[ACCOUNT NAME];AccountKey=[ACCOUNT KEY]";
 
     public static class class1 extends TableServiceEntity {
@@ -569,10 +569,10 @@ public class TableTestBase {
     public static void setup() throws URISyntaxException, StorageException, InvalidKeyException {
 
         // UNCOMMENT TO USE FIDDLER
-        // System.setProperty("http.proxyHost", "localhost");
-        // System.setProperty("http.proxyPort", "8888");
-        // System.setProperty("https.proxyHost", "localhost");
-        // System.setProperty("https.proxyPort", "8888");
+        System.setProperty("http.proxyHost", "localhost");
+        System.setProperty("http.proxyPort", "8888");
+        System.setProperty("https.proxyHost", "localhost");
+        System.setProperty("https.proxyPort", "8888");
         if (USE_DEV_FABRIC) {
             httpAcc = CloudStorageAccount.getDevelopmentStorageAccount();
         }
@@ -584,12 +584,14 @@ public class TableTestBase {
         tClient = httpAcc.createCloudTableClient();
         qClient = httpAcc.createCloudQueueClient();
         testSuiteTableName = generateRandomTableName();
-        tClient.createTable(testSuiteTableName);
+        CloudTable table = tClient.getTableReference(testSuiteTableName);
+        table.create();
     }
 
     @AfterClass
-    public static void teardown() throws StorageException {
-        tClient.deleteTable(testSuiteTableName);
+    public static void teardown() throws StorageException, URISyntaxException {
+        CloudTable table = tClient.getTableReference(testSuiteTableName);
+        table.delete();
     }
 
     protected static String generateRandomTableName() {

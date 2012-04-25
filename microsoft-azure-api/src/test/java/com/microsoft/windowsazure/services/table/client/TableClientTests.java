@@ -39,7 +39,8 @@ public class TableClientTests extends TableTestBase {
         ArrayList<String> tables = new ArrayList<String>();
         for (int m = 0; m < 20; m++) {
             String name = String.format("%s%s", tableBaseName, new DecimalFormat("#0000").format(m));
-            tClient.createTable(name);
+            CloudTable table = tClient.getTableReference(name);
+            table.create();
             tables.add(name);
         }
 
@@ -73,7 +74,8 @@ public class TableClientTests extends TableTestBase {
         }
         finally {
             for (String s : tables) {
-                tClient.deleteTable(s);
+                CloudTable table = tClient.getTableReference(s);
+                table.delete();
             }
         }
     }
@@ -84,7 +86,8 @@ public class TableClientTests extends TableTestBase {
         ArrayList<String> tables = new ArrayList<String>();
         for (int m = 0; m < 20; m++) {
             String name = String.format("%s%s", tableBaseName, new DecimalFormat("#0000").format(m));
-            tClient.createTable(name);
+            CloudTable table = tClient.getTableReference(name);
+            table.create();
             tables.add(name);
         }
 
@@ -125,7 +128,8 @@ public class TableClientTests extends TableTestBase {
         }
         finally {
             for (String s : tables) {
-                tClient.deleteTable(s);
+                CloudTable table = tClient.getTableReference(s);
+                table.delete();
             }
         }
     }
@@ -136,7 +140,8 @@ public class TableClientTests extends TableTestBase {
         ArrayList<String> tables = new ArrayList<String>();
         for (int m = 0; m < 20; m++) {
             String name = String.format("%s%s", tableBaseName, new DecimalFormat("#0000").format(m));
-            tClient.createTable(name);
+            CloudTable table = tClient.getTableReference(name);
+            table.create();
             tables.add(name);
         }
 
@@ -163,21 +168,23 @@ public class TableClientTests extends TableTestBase {
         }
         finally {
             for (String s : tables) {
-                tClient.deleteTable(s);
+                CloudTable table = tClient.getTableReference(s);
+                table.delete();
             }
         }
     }
 
     @Test
-    public void tableCreateAndAttemptCreateOnceExists() throws StorageException {
+    public void tableCreateAndAttemptCreateOnceExists() throws StorageException, URISyntaxException {
         String tableName = generateRandomTableName();
+        CloudTable table = tClient.getTableReference(tableName);
         try {
-            tClient.createTable(tableName);
-            Assert.assertTrue(tClient.doesTableExist(tableName));
+            table.create();
+            Assert.assertTrue(table.exists());
 
             // Should fail as it already exists
             try {
-                tClient.createTable(tableName);
+                table.create();
                 fail();
             }
             catch (StorageException ex) {
@@ -186,84 +193,91 @@ public class TableClientTests extends TableTestBase {
         }
         finally {
             // cleanup
-            tClient.deleteTableIfExists(tableName);
+            table.deleteIfExists();
         }
     }
 
     @Test
-    public void tableCreateExistsAndDelete() throws StorageException {
+    public void tableCreateExistsAndDelete() throws StorageException, URISyntaxException {
         String tableName = generateRandomTableName();
+        CloudTable table = tClient.getTableReference(tableName);
         try {
-            Assert.assertTrue(tClient.createTableIfNotExists(tableName));
-            Assert.assertTrue(tClient.doesTableExist(tableName));
-            Assert.assertTrue(tClient.deleteTableIfExists(tableName));
+            Assert.assertTrue(table.createIfNotExist());
+            Assert.assertTrue(table.exists());
+            Assert.assertTrue(table.deleteIfExists());
         }
         finally {
             // cleanup
-            tClient.deleteTableIfExists(tableName);
+            table.deleteIfExists();
         }
     }
 
     @Test
-    public void tableCreateIfNotExists() throws StorageException {
+    public void tableCreateIfNotExists() throws StorageException, URISyntaxException {
         String tableName = generateRandomTableName();
+        CloudTable table = tClient.getTableReference(tableName);
         try {
-            Assert.assertTrue(tClient.createTableIfNotExists(tableName));
-            Assert.assertTrue(tClient.doesTableExist(tableName));
-            Assert.assertFalse(tClient.createTableIfNotExists(tableName));
+            Assert.assertTrue(table.createIfNotExist());
+            Assert.assertTrue(table.exists());
+            Assert.assertFalse(table.createIfNotExist());
         }
         finally {
             // cleanup
-            tClient.deleteTableIfExists(tableName);
+            table.deleteIfExists();
         }
     }
 
     @Test
-    public void tableDeleteIfExists() throws StorageException {
+    public void tableDeleteIfExists() throws StorageException, URISyntaxException {
         String tableName = generateRandomTableName();
+        CloudTable table = tClient.getTableReference(tableName);
 
-        Assert.assertFalse(tClient.deleteTableIfExists(tableName));
+        Assert.assertFalse(table.deleteIfExists());
 
-        tClient.createTable(tableName);
-        Assert.assertTrue(tClient.doesTableExist(tableName));
-        Assert.assertTrue(tClient.deleteTableIfExists(tableName));
-        Assert.assertFalse(tClient.deleteTableIfExists(tableName));
+        table.create();
+        Assert.assertTrue(table.exists());
+        Assert.assertTrue(table.deleteIfExists());
+        Assert.assertFalse(table.deleteIfExists());
     }
 
     @Test
-    public void tableDeleteWhenExistAndNotExists() throws StorageException {
+    public void tableDeleteWhenExistAndNotExists() throws StorageException, URISyntaxException {
         String tableName = generateRandomTableName();
+        CloudTable table = tClient.getTableReference(tableName);
+
         try {
             // Should fail as it doesnt already exists
             try {
-                tClient.deleteTable(tableName);
+                table.delete();
                 fail();
             }
             catch (StorageException ex) {
                 Assert.assertEquals(ex.getMessage(), "Not Found");
             }
 
-            tClient.createTable(tableName);
-            Assert.assertTrue(tClient.doesTableExist(tableName));
-            tClient.deleteTable(tableName);
-            Assert.assertFalse(tClient.doesTableExist(tableName));
+            table.create();
+            Assert.assertTrue(table.exists());
+            table.delete();
+            Assert.assertFalse(table.exists());
         }
         finally {
-            tClient.deleteTableIfExists(tableName);
+            table.deleteIfExists();
         }
     }
 
     @Test
-    public void tableDoesTableExist() throws StorageException {
+    public void tableDoesTableExist() throws StorageException, URISyntaxException {
         String tableName = generateRandomTableName();
+        CloudTable table = tClient.getTableReference(tableName);
+
         try {
-            Assert.assertFalse(tClient.doesTableExist(tableName));
-            Assert.assertTrue(tClient.createTableIfNotExists(tableName));
-            Assert.assertTrue(tClient.doesTableExist(tableName));
+            Assert.assertFalse(table.exists());
+            Assert.assertTrue(table.createIfNotExist());
+            Assert.assertTrue(table.exists());
         }
         finally {
             // cleanup
-            tClient.deleteTableIfExists(tableName);
+            table.deleteIfExists();
         }
     }
 }
