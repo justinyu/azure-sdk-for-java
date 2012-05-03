@@ -200,11 +200,6 @@ final class BlobConstants {
     public static final int DEFAULT_WRITE_BLOCK_SIZE_IN_BYTES = 4 * com.microsoft.windowsazure.services.core.storage.Constants.MB;
 
     /**
-     * XML element for the end time of an access policy.
-     */
-    public static final String EXPIRY = "Expiry";
-
-    /**
      * Specifies snapshots are to be included.
      */
     public static final String INCLUDE_SNAPSHOTS_VALUE = "include";
@@ -252,11 +247,6 @@ final class BlobConstants {
             + "page-write";
 
     /**
-     * XML element for the permission of an access policy.
-     */
-    public static final String PERMISSION = "Permission";
-
-    /**
      * XML element for properties.
      */
     public static final String PROPERTIES = "Properties";
@@ -298,11 +288,6 @@ final class BlobConstants {
      * Specifies only snapshots are to be included.
      */
     public static final String SNAPSHOTS_ONLY_VALUE = "only";
-
-    /**
-     * XML element for the start time of an access policy.
-     */
-    public static final String START = "Start";
 
     /**
      * XML element for page range start elements.

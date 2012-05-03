@@ -49,16 +49,16 @@ public final class SharedAccessTablePolicy {
         for (final char c : chars) {
             switch (c) {
                 case 'r':
-                    retSet.add(SharedAccessTablePermissions.READ);
+                    retSet.add(SharedAccessTablePermissions.QUREY);
                     break;
-                case 'w':
-                    retSet.add(SharedAccessTablePermissions.WRITE);
+                case 'a':
+                    retSet.add(SharedAccessTablePermissions.ADD);
+                    break;
+                case 'u':
+                    retSet.add(SharedAccessTablePermissions.UPDATE);
                     break;
                 case 'd':
                     retSet.add(SharedAccessTablePermissions.DELETE);
-                    break;
-                case 'l':
-                    retSet.add(SharedAccessTablePermissions.LIST);
                     break;
                 default:
                     throw new IllegalArgumentException("value");
@@ -85,20 +85,20 @@ public final class SharedAccessTablePolicy {
         // The service supports a fixed order => rwdl
         final StringBuilder builder = new StringBuilder();
 
-        if (permissions.contains(SharedAccessTablePermissions.READ)) {
+        if (permissions.contains(SharedAccessTablePermissions.QUREY)) {
             builder.append("r");
         }
 
-        if (permissions.contains(SharedAccessTablePermissions.WRITE)) {
-            builder.append("w");
+        if (permissions.contains(SharedAccessTablePermissions.ADD)) {
+            builder.append("a");
+        }
+
+        if (permissions.contains(SharedAccessTablePermissions.UPDATE)) {
+            builder.append("u");
         }
 
         if (permissions.contains(SharedAccessTablePermissions.DELETE)) {
             builder.append("d");
-        }
-
-        if (permissions.contains(SharedAccessTablePermissions.LIST)) {
-            builder.append("l");
         }
 
         return builder.toString();

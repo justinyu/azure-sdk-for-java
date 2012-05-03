@@ -20,6 +20,11 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.EnumSet;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.UUID;
 
 import junit.framework.Assert;
 
@@ -279,5 +284,65 @@ public class TableClientTests extends TableTestBase {
             // cleanup
             table.deleteIfExists();
         }
+    }
+
+    @Test
+    public void tableGetSetPermissionTest() throws StorageException, URISyntaxException {
+        String tableName = generateRandomTableName();
+        CloudTable table = tClient.getTableReference(tableName);
+        table.create();
+
+        TablePermissions expectedPermissions;
+        TablePermissions testPermissions;
+
+        try {
+            // Test new permissions.
+            expectedPermissions = new TablePermissions();
+            testPermissions = table.downloadPermissions();
+            assertTablePermissionsEqual(expectedPermissions, testPermissions);
+
+            // Test setting empty permissions.
+            table.uploadPermissions(expectedPermissions);
+            testPermissions = table.downloadPermissions();
+            assertTablePermissionsEqual(expectedPermissions, testPermissions);
+
+            // Add a policy, check setting and getting.
+            SharedAccessTablePolicy policy1 = new SharedAccessTablePolicy();
+            Calendar now = GregorianCalendar.getInstance();
+            policy1.setSharedAccessStartTime(now.getTime());
+            now.add(Calendar.MINUTE, 10);
+            policy1.setSharedAccessExpiryTime(now.getTime());
+
+            policy1.setPermissions(EnumSet.of(SharedAccessTablePermissions.ADD, SharedAccessTablePermissions.QUREY,
+                    SharedAccessTablePermissions.UPDATE, SharedAccessTablePermissions.DELETE));
+            expectedPermissions.getSharedAccessPolicies().put(UUID.randomUUID().toString(), policy1);
+
+            table.uploadPermissions(expectedPermissions);
+            testPermissions = table.downloadPermissions();
+            assertTablePermissionsEqual(expectedPermissions, testPermissions);
+        }
+        finally {
+            // cleanup
+            table.deleteIfExists();
+        }
+    }
+
+    static void assertTablePermissionsEqual(TablePermissions expected, TablePermissions actual) {
+        HashMap<String, SharedAccessTablePolicy> expectedPolicies = expected.getSharedAccessPolicies();
+        HashMap<String, SharedAccessTablePolicy> actualPolicies = actual.getSharedAccessPolicies();
+        Assert.assertEquals("SharedAccessPolicies.Count", expectedPolicies.size(), actualPolicies.size());
+        for (String name : expectedPolicies.keySet()) {
+            Assert.assertTrue("Key" + name + " doesn't exist", actualPolicies.containsKey(name));
+            SharedAccessTablePolicy expectedPolicy = expectedPolicies.get(name);
+            SharedAccessTablePolicy actualPolicy = actualPolicies.get(name);
+            Assert.assertEquals("Policy: " + name + "\tPermissions\n", expectedPolicy.getPermissions().toString(),
+                    actualPolicy.getPermissions().toString());
+            Assert.assertEquals("Policy: " + name + "\tStartDate\n", expectedPolicy.getSharedAccessStartTime()
+                    .toString(), actualPolicy.getSharedAccessStartTime().toString());
+            Assert.assertEquals("Policy: " + name + "\tExpireDate\n", expectedPolicy.getSharedAccessExpiryTime()
+                    .toString(), actualPolicy.getSharedAccessExpiryTime().toString());
+
+        }
+
     }
 }

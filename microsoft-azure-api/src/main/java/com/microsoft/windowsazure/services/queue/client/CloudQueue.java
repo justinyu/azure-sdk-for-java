@@ -16,6 +16,7 @@
 package com.microsoft.windowsazure.services.queue.client;
 
 import java.io.OutputStream;
+import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -70,7 +71,7 @@ public final class CloudQueue {
     /**
      * A reference to the queue's associated service client.
      */
-    private CloudQueueClient queueServiceClient;
+    private final CloudQueueClient queueServiceClient;
 
     /**
      * The queue's Metadata collection.
@@ -1360,5 +1361,160 @@ public final class CloudQueue {
         ExecutionEngine.executeWithRetry(this.queueServiceClient, this, impl, options.getRetryPolicyFactory(),
                 opContext);
 
+    }
+
+    /**
+     * Uploads the queue's permissions.
+     * 
+     * @param permissions
+     *            A {@link QueuePermissions} object that represents the permissions to upload.
+     * 
+     * @throws StorageException
+     *             If a storage service error occurred.
+     */
+    @DoesServiceRequest
+    public void uploadPermissions(final QueuePermissions permissions) throws StorageException {
+        this.uploadPermissions(permissions, null, null);
+    }
+
+    /**
+     * Uploads the queue's permissions using the specified request options and operation context.
+     * 
+     * @param permissions
+     *            A {@link QueuePermissions} object that represents the permissions to upload.
+     * @param options
+     *            A {@link QueueRequestOptions} object that specifies any additional options for the request. Specifying
+     *            <code>null</code> will use the default request options from the associated service client (
+     *            {@link CloudQueueClient}).
+     * @param opContext
+     *            An {@link OperationContext} object that represents the context for the current operation. This object
+     *            is used to track requests to the storage service, and to provide additional runtime information about
+     *            the operation.
+     * 
+     * @throws StorageException
+     *             If a storage service error occurred.
+     */
+    @DoesServiceRequest
+    public void uploadPermissions(final QueuePermissions permissions, QueueRequestOptions options,
+            OperationContext opContext) throws StorageException {
+        if (opContext == null) {
+            opContext = new OperationContext();
+        }
+
+        if (options == null) {
+            options = new QueueRequestOptions();
+        }
+
+        opContext.initialize();
+        options.applyDefaults(this.queueServiceClient);
+
+        final StorageOperation<CloudQueueClient, CloudQueue, Void> impl = new StorageOperation<CloudQueueClient, CloudQueue, Void>(
+                options) {
+
+            @Override
+            public Void execute(final CloudQueueClient client, final CloudQueue queue, final OperationContext opContext)
+                    throws Exception {
+
+                final HttpURLConnection request = QueueRequest.setAcl(queue.uri, this.getRequestOptions()
+                        .getTimeoutIntervalInMs(), opContext);
+
+                final StringWriter outBuffer = new StringWriter();
+
+                QueueRequest.writeSharedAccessIdentifiersToStream(permissions.getSharedAccessPolicies(), outBuffer);
+
+                final byte[] aclBytes = outBuffer.toString().getBytes("UTF8");
+                client.getCredentials().signRequest(request, aclBytes.length);
+                final OutputStream outStreamRef = request.getOutputStream();
+                outStreamRef.write(aclBytes);
+
+                this.setResult(ExecutionEngine.processRequest(request, opContext));
+
+                if (this.getResult().getStatusCode() != HttpURLConnection.HTTP_NO_CONTENT) {
+                    this.setNonExceptionedRetryableFailure(true);
+                }
+
+                return null;
+            }
+        };
+
+        ExecutionEngine.executeWithRetry(this.queueServiceClient, this, impl, options.getRetryPolicyFactory(),
+                opContext);
+    }
+
+    /**
+     * Downloads the permission settings for the queue.
+     * 
+     * @return A {@link QueuePermissions} object that represents the queue's permissions.
+     * 
+     * @throws StorageException
+     *             If a storage service error occurred.
+     */
+    @DoesServiceRequest
+    public QueuePermissions downloadPermissions() throws StorageException {
+        return this.downloadPermissions(null, null);
+    }
+
+    /**
+     * Downloads the permissions settings for the queue using the specified request options and operation context.
+     * 
+     * @param options
+     *            A {@link QueueRequestOptions} object that specifies any additional options for the request. Specifying
+     *            <code>null</code> will use the default request options from the associated service client (
+     *            {@link CloudQueueClient}).
+     * @param opContext
+     *            An {@link OperationContext} object that represents the context for the current operation. This object
+     *            is used to track requests to the storage service, and to provide additional runtime information about
+     *            the operation.
+     * 
+     * @return A {@link QueuePermissions} object that represents the container's permissions.
+     * 
+     * @throws StorageException
+     *             If a storage service error occurred.
+     */
+    @DoesServiceRequest
+    public QueuePermissions downloadPermissions(QueueRequestOptions options, OperationContext opContext)
+            throws StorageException {
+        if (opContext == null) {
+            opContext = new OperationContext();
+        }
+
+        if (options == null) {
+            options = new QueueRequestOptions();
+        }
+
+        opContext.initialize();
+        options.applyDefaults(this.queueServiceClient);
+
+        final StorageOperation<CloudQueueClient, CloudQueue, QueuePermissions> impl = new StorageOperation<CloudQueueClient, CloudQueue, QueuePermissions>(
+                options) {
+
+            @Override
+            public QueuePermissions execute(final CloudQueueClient client, final CloudQueue queue,
+                    final OperationContext opContext) throws Exception {
+
+                final HttpURLConnection request = QueueRequest.getAcl(queue.uri, this.getRequestOptions()
+                        .getTimeoutIntervalInMs(), opContext);
+
+                client.getCredentials().signRequest(request, -1L);
+
+                this.setResult(ExecutionEngine.processRequest(request, opContext));
+
+                if (this.getResult().getStatusCode() != HttpURLConnection.HTTP_OK) {
+                    this.setNonExceptionedRetryableFailure(true);
+                }
+
+                final QueuePermissions permissions = new QueuePermissions();
+                final QueueAccessPolicyResponse response = new QueueAccessPolicyResponse(request.getInputStream());
+
+                for (final String key : response.getAccessIdentifiers().keySet()) {
+                    permissions.getSharedAccessPolicies().put(key, response.getAccessIdentifiers().get(key));
+                }
+
+                return permissions;
+            }
+        };
+
+        return ExecutionEngine.executeWithRetry(this.queueServiceClient, this, impl, options.getRetryPolicyFactory(),
+                opContext);
     }
 }

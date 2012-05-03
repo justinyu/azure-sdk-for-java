@@ -19,11 +19,8 @@ import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
 
 import com.microsoft.windowsazure.services.blob.client.BlobContainerPermissions;
-import com.microsoft.windowsazure.services.blob.client.BlobRequestOptions;
-import com.microsoft.windowsazure.services.blob.client.CloudBlobClient;
 import com.microsoft.windowsazure.services.core.storage.DoesServiceRequest;
 import com.microsoft.windowsazure.services.core.storage.OperationContext;
 import com.microsoft.windowsazure.services.core.storage.StorageErrorCodeStrings;
@@ -52,11 +49,6 @@ public final class CloudTable {
      * Holds a reference to the associated service client.
      */
     private final CloudTableClient tableServiceClient;
-
-    /**
-     * Represents the table metadata.
-     */
-    HashMap<String, String> metadata;
 
     /**
      * Creates an instance of the <code>CloudTable</code> class using the specified address and client.
@@ -407,10 +399,10 @@ public final class CloudTable {
     }
 
     /**
-     * Uploads the container's permissions.
+     * Uploads the table's permissions.
      * 
      * @param permissions
-     *            A {@link BlobContainerPermissions} object that represents the permissions to upload.
+     *            A {@link TablePermissions} object that represents the permissions to upload.
      * 
      * @throws StorageException
      *             If a storage service error occurred.
@@ -424,11 +416,11 @@ public final class CloudTable {
      * Uploads the container's permissions using the specified request options and operation context.
      * 
      * @param permissions
-     *            A {@link BlobContainerPermissions} object that represents the permissions to upload.
+     *            A {@link TablePermissions} object that represents the permissions to upload.
      * @param options
-     *            A {@link BlobRequestOptions} object that specifies any additional options for the request. Specifying
+     *            A {@link TableRequestOptions} object that specifies any additional options for the request. Specifying
      *            <code>null</code> will use the default request options from the associated service client (
-     *            {@link CloudBlobClient}).
+     *            {@link CloudTableClient}).
      * @param opContext
      *            An {@link OperationContext} object that represents the context for the current operation. This object
      *            is used to track requests to the storage service, and to provide additional runtime information about
@@ -450,6 +442,7 @@ public final class CloudTable {
 
         opContext.initialize();
         options.applyDefaults(this.tableServiceClient);
+        final String tableName = this.name;
 
         final StorageOperation<CloudTableClient, CloudTable, Void> impl = new StorageOperation<CloudTableClient, CloudTable, Void>(
                 options) {
@@ -458,17 +451,89 @@ public final class CloudTable {
             public Void execute(final CloudTableClient client, final CloudTable table, final OperationContext opContext)
                     throws Exception {
 
-                final HttpURLConnection request = TableRequest.setAcl(table.uri, this.getRequestOptions()
-                        .getTimeoutIntervalInMs(), permissions.getPublicAccess(), opContext);
+                final HttpURLConnection request = TableRequest.setAcl(table.uri, tableName, this.getRequestOptions()
+                        .getTimeoutIntervalInMs(), opContext);
 
                 final StringWriter outBuffer = new StringWriter();
 
                 TableRequest.writeSharedAccessIdentifiersToStream(permissions.getSharedAccessPolicies(), outBuffer);
 
                 final byte[] aclBytes = outBuffer.toString().getBytes("UTF8");
-                client.getCredentials().signRequest(request, aclBytes.length);
+                client.getCredentials().signRequestLite(request, aclBytes.length, opContext);
                 final OutputStream outStreamRef = request.getOutputStream();
                 outStreamRef.write(aclBytes);
+
+                this.setResult(ExecutionEngine.processRequest(request, opContext));
+
+                if (this.getResult().getStatusCode() != HttpURLConnection.HTTP_NO_CONTENT) {
+                    this.setNonExceptionedRetryableFailure(true);
+                }
+
+                return null;
+            }
+        };
+
+        ExecutionEngine.executeWithRetry(this.tableServiceClient, this, impl, options.getRetryPolicyFactory(),
+                opContext);
+    }
+
+    /**
+     * Downloads the permission settings for the table.
+     * 
+     * @return A {@link TablePermissions} object that represents the container's permissions.
+     * 
+     * @throws StorageException
+     *             If a storage service error occurred.
+     */
+    @DoesServiceRequest
+    public TablePermissions downloadPermissions() throws StorageException {
+        return this.downloadPermissions(null, null);
+    }
+
+    /**
+     * Downloads the permissions settings for the table using the specified request options and operation context.
+     * 
+     * @param options
+     *            A {@link TableRequestOptions} object that specifies any additional options for the request. Specifying
+     *            <code>null</code> will use the default request options from the associated service client (
+     *            {@link CloudTableClient}).
+     * @param opContext
+     *            An {@link OperationContext} object that represents the context for the current operation. This object
+     *            is used to track requests to the storage service, and to provide additional runtime information about
+     *            the operation.
+     * 
+     * @return A {@link BlobContainerPermissions} object that represents the container's permissions.
+     * 
+     * @throws StorageException
+     *             If a storage service error occurred.
+     */
+    @DoesServiceRequest
+    public TablePermissions downloadPermissions(TableRequestOptions options, OperationContext opContext)
+            throws StorageException {
+        if (opContext == null) {
+            opContext = new OperationContext();
+        }
+
+        if (options == null) {
+            options = new TableRequestOptions();
+        }
+
+        opContext.initialize();
+        options.applyDefaults(this.tableServiceClient);
+        final String tableName = this.name;
+        final TableRequestOptions tableRequestOptions = options;
+
+        final StorageOperation<CloudTableClient, CloudTable, TablePermissions> impl = new StorageOperation<CloudTableClient, CloudTable, TablePermissions>(
+                options) {
+
+            @Override
+            public TablePermissions execute(final CloudTableClient client, final CloudTable table,
+                    final OperationContext opContext) throws Exception {
+
+                final HttpURLConnection request = TableRequest.getAcl(table.uri, tableName, this.getRequestOptions()
+                        .getTimeoutIntervalInMs(), opContext);
+
+                client.getCredentials().signRequestLite(request, -1L, opContext);
 
                 this.setResult(ExecutionEngine.processRequest(request, opContext));
 
@@ -476,12 +541,17 @@ public final class CloudTable {
                     this.setNonExceptionedRetryableFailure(true);
                 }
 
-                table.updatePropertiesFromResponse(request);
-                return null;
+                final TablePermissions permissions = new TablePermissions();
+                final TableAccessPolicyResponse response = new TableAccessPolicyResponse(request.getInputStream());
+                for (final String key : response.getAccessIdentifiers().keySet()) {
+                    permissions.getSharedAccessPolicies().put(key, response.getAccessIdentifiers().get(key));
+                }
+
+                return permissions;
             }
         };
 
-        ExecutionEngine.executeWithRetry(this.tableServiceClient, this, impl, options.getRetryPolicyFactory(),
+        return ExecutionEngine.executeWithRetry(this.tableServiceClient, this, impl, options.getRetryPolicyFactory(),
                 opContext);
     }
 }

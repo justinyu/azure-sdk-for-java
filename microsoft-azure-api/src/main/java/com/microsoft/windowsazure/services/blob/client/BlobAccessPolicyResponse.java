@@ -64,16 +64,16 @@ final class BlobAccessPolicyResponse extends AccessPolicyResponseBase<SharedAcce
             if (eventType == XMLStreamConstants.START_ELEMENT || eventType == XMLStreamConstants.END_ELEMENT) {
                 final String name = xmlr.getName().toString();
 
-                if (eventType == XMLStreamConstants.START_ELEMENT && name.equals(BlobConstants.PERMISSION)) {
+                if (eventType == XMLStreamConstants.START_ELEMENT && name.equals(Constants.PERMISSION)) {
                     retPolicy.setPermissions(SharedAccessBlobPolicy.permissionsFromString(Utility
-                            .readElementFromXMLReader(xmlr, BlobConstants.PERMISSION)));
+                            .readElementFromXMLReader(xmlr, Constants.PERMISSION)));
                 }
-                else if (eventType == XMLStreamConstants.START_ELEMENT && name.equals(BlobConstants.START)) {
-                    final String tempString = Utility.readElementFromXMLReader(xmlr, BlobConstants.START);
+                else if (eventType == XMLStreamConstants.START_ELEMENT && name.equals(Constants.START)) {
+                    final String tempString = Utility.readElementFromXMLReader(xmlr, Constants.START);
                     retPolicy.setSharedAccessStartTime(Utility.parseISO8061LongDateFromString(tempString));
                 }
-                else if (eventType == XMLStreamConstants.START_ELEMENT && name.equals(BlobConstants.EXPIRY)) {
-                    final String tempString = Utility.readElementFromXMLReader(xmlr, BlobConstants.EXPIRY);
+                else if (eventType == XMLStreamConstants.START_ELEMENT && name.equals(Constants.EXPIRY)) {
+                    final String tempString = Utility.readElementFromXMLReader(xmlr, Constants.EXPIRY);
                     retPolicy.setSharedAccessExpiryTime(Utility.parseISO8061LongDateFromString(tempString));
                 }
                 else if (eventType == XMLStreamConstants.END_ELEMENT && name.equals(Constants.ACCESS_POLICY)) {

@@ -35,7 +35,7 @@ import com.microsoft.windowsazure.services.queue.client.CloudQueueClient;
  */
 public class TableTestBase {
     public static boolean USE_DEV_FABRIC = false;
-    public static final String CLOUD_ACCOUNT_HTTP = "DefaultEndpointsProtocol=http;AccountName=mixteched2011;AccountKey=AsWVSV4j6dLLEohHd3mvmHGWm0pZNpjY7tA84qY9O4KlFcq6rIdgTUPqqMh+eGK81TBe8BBPMoGVxYSGXdhIGg==";
+    public static final String CLOUD_ACCOUNT_HTTP = "BlobEndpoint=http://65.55.25.123:80/xscltest;QueueEndpoint=http://65.55.25.124:80/xscltest;TableEndpoint=http://65.55.25.125:80/xscltest;AccountName=xscltest;AccountKey=FjUfNl1KiJttbXlsdkMzBTC7WagvrRM9/g6UPBuy0ypCpAbYTL6/KA+dI/7gyoWvLFYmah3IviUP1jykOHHOlA==";
     public static final String CLOUD_ACCOUNT_HTTPS = "DefaultEndpointsProtocol=https;AccountName=[ACCOUNT NAME];AccountKey=[ACCOUNT KEY]";
 
     public static class class1 extends TableServiceEntity {

@@ -27,6 +27,7 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
+import com.microsoft.windowsazure.services.core.storage.AccessCondition;
 import com.microsoft.windowsazure.services.core.storage.Constants;
 import com.microsoft.windowsazure.services.core.storage.Credentials;
 import com.microsoft.windowsazure.services.core.storage.OperationContext;
@@ -34,6 +35,7 @@ import com.microsoft.windowsazure.services.core.storage.StorageException;
 import com.microsoft.windowsazure.services.core.storage.utils.UriQueryBuilder;
 import com.microsoft.windowsazure.services.core.storage.utils.Utility;
 import com.microsoft.windowsazure.services.core.storage.utils.implementation.BaseRequest;
+import com.microsoft.windowsazure.services.core.storage.utils.implementation.LeaseAction;
 import com.microsoft.windowsazure.services.core.storage.utils.implementation.ListingContext;
 
 /**
@@ -292,6 +294,75 @@ final class ContainerRequest {
     }
 
     /**
+     * Constructs a HttpURLConnection to Acquire,Release,Break, or Renew a blob lease. Sign with 0 length.
+     * 
+     * @param uri
+     *            The absolute URI to the blob
+     * @param timeout
+     *            The server timeout interval
+     * @param action
+     *            the LeaseAction to perform
+     * 
+     * @param visibilityTimeoutInSeconds
+     *            Specifies the the span of time for which to acquire the lease, in seconds.
+     *            If null, an infinite lease will be acquired. If not null, this must be greater than zero.
+     * 
+     * @param proposedLeaseId
+     *            A <code>String</code> that represents the proposed lease ID for the new lease,
+     *            or null if no lease ID is proposed.
+     * 
+     * @param breakPeriodInSeconds
+     *            Specifies the amount of time to allow the lease to remain, in seconds.
+     *            If null, the break period is the remainder of the current lease, or zero for infinite leases.
+     * 
+     * @param accessCondition
+     *            An {@link AccessCondition} object that represents the access conditions for the blob.
+     * @param blobOptions
+     *            the options to use for the request.
+     * @param opContext
+     *            a tracking object for the request
+     * @return a HttpURLConnection to use to perform the operation.
+     * @throws IOException
+     *             if there is an error opening the connection
+     * @throws URISyntaxException
+     *             if the resource URI is invalid
+     * @throws StorageException
+     *             an exception representing any error which occurred during the operation.
+     * @throws IllegalArgumentException
+     */
+    public static HttpURLConnection lease(final URI uri, final int timeout, final LeaseAction action,
+            final Integer leaseTimeInSeconds, final String proposedLeaseId, final Integer breakPeriodInSeconds,
+            final AccessCondition accessCondition, final BlobRequestOptions blobOptions,
+            final OperationContext opContext) throws IOException, URISyntaxException, StorageException {
+
+        final UriQueryBuilder builder = getContainerUriQueryBuilder();
+        builder.add("comp", "lease");
+
+        final HttpURLConnection request = createURLConnection(uri, timeout, builder, opContext);
+
+        request.setDoOutput(true);
+        request.setRequestMethod("PUT");
+        request.setFixedLengthStreamingMode(0);
+        request.setRequestProperty("x-ms-lease-action", action.toString());
+
+        if (leaseTimeInSeconds != null) {
+            request.setRequestProperty("x-ms-lease-duration", leaseTimeInSeconds.toString());
+        }
+        else {
+            request.setRequestProperty("x-ms-lease-duration", "-1");
+        }
+
+        if (proposedLeaseId != null) {
+            request.setRequestProperty("x-ms-proposed-lease-id", proposedLeaseId);
+        }
+
+        if (accessCondition != null) {
+            accessCondition.applyConditionToRequest(request);
+        }
+        return request;
+    }
+
+    /**
      * Signs the request for Shared Key authentication.
      * 
      * @param request
@@ -362,19 +433,19 @@ final class ContainerRequest {
             xmlw.writeStartElement(Constants.ACCESS_POLICY);
 
             // Set the Start Time
-            xmlw.writeStartElement(BlobConstants.START);
+            xmlw.writeStartElement(Constants.START);
             xmlw.writeCharacters(Utility.getUTCTimeOrEmpty(policy.getSharedAccessStartTime()));
             // end Start
             xmlw.writeEndElement();
 
             // Set the Expiry Time
-            xmlw.writeStartElement(BlobConstants.EXPIRY);
+            xmlw.writeStartElement(Constants.EXPIRY);
             xmlw.writeCharacters(Utility.getUTCTimeOrEmpty(policy.getSharedAccessExpiryTime()));
             // end Expiry
             xmlw.writeEndElement();
 
             // Set the Permissions
-            xmlw.writeStartElement(BlobConstants.PERMISSION);
+            xmlw.writeStartElement(Constants.PERMISSION);
             xmlw.writeCharacters(SharedAccessBlobPolicy.permissionsToString(policy.getPermissions()));
             // end Permission
             xmlw.writeEndElement();

@@ -20,25 +20,31 @@ import java.util.EnumSet;
  * Specifies the set of possible permissions for a shared access table policy.
  */
 public enum SharedAccessTablePermissions {
-    /**
-     * Specifies Read access granted.
-     */
-    READ((byte) 0x1),
 
     /**
-     * Specifies Write access granted.
+     * No shared access granted.
      */
-    WRITE((byte) 0x2),
+    NONE((byte) 0x0),
 
     /**
-     * Specifies Delete access granted for blobs.
+     * Permission to query entities granted.
      */
-    DELETE((byte) 0x4),
+    QUREY((byte) 0x1),
 
     /**
-     * Specifies List access granted.
+     * Permission to add entities granted.
      */
-    LIST((byte) 0x8);
+    ADD((byte) 0x2),
+
+    /**
+     * Permission to modify entities granted.
+     */
+    UPDATE((byte) 0x4),
+
+    /**
+     * Permission to delete entities granted.
+     */
+    DELETE((byte) 0x8);
 
     /**
      * Returns the enum set representing the shared access permissions for the specified byte value.
@@ -51,18 +57,18 @@ public enum SharedAccessTablePermissions {
     protected static EnumSet<SharedAccessTablePermissions> fromByte(final byte value) {
         final EnumSet<SharedAccessTablePermissions> retSet = EnumSet.noneOf(SharedAccessTablePermissions.class);
 
-        if (value == READ.value) {
-            retSet.add(READ);
+        if (value == QUREY.value) {
+            retSet.add(QUREY);
         }
 
-        if (value == WRITE.value) {
-            retSet.add(WRITE);
+        if (value == ADD.value) {
+            retSet.add(ADD);
+        }
+        if (value == UPDATE.value) {
+            retSet.add(UPDATE);
         }
         if (value == DELETE.value) {
             retSet.add(DELETE);
-        }
-        if (value == LIST.value) {
-            retSet.add(LIST);
         }
 
         return retSet;
