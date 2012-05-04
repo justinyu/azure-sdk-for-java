@@ -25,6 +25,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 
 import com.microsoft.windowsazure.services.core.storage.AccessCondition;
@@ -32,6 +33,7 @@ import com.microsoft.windowsazure.services.core.storage.Constants;
 import com.microsoft.windowsazure.services.core.storage.DoesServiceRequest;
 import com.microsoft.windowsazure.services.core.storage.LeaseStatus;
 import com.microsoft.windowsazure.services.core.storage.OperationContext;
+import com.microsoft.windowsazure.services.core.storage.RetryLinearRetry;
 import com.microsoft.windowsazure.services.core.storage.RetryNoRetry;
 import com.microsoft.windowsazure.services.core.storage.RetryPolicy;
 import com.microsoft.windowsazure.services.core.storage.StorageCredentialsSharedAccessSignature;
@@ -43,6 +45,7 @@ import com.microsoft.windowsazure.services.core.storage.utils.PathUtility;
 import com.microsoft.windowsazure.services.core.storage.utils.StreamMd5AndLength;
 import com.microsoft.windowsazure.services.core.storage.utils.UriQueryBuilder;
 import com.microsoft.windowsazure.services.core.storage.utils.Utility;
+import com.microsoft.windowsazure.services.core.storage.utils.implementation.BaseResponse;
 import com.microsoft.windowsazure.services.core.storage.utils.implementation.ExecutionEngine;
 import com.microsoft.windowsazure.services.core.storage.utils.implementation.LeaseAction;
 import com.microsoft.windowsazure.services.core.storage.utils.implementation.StorageOperation;
@@ -488,8 +491,8 @@ public abstract class CloudBlob implements ListBlobItem {
     }
 
     /**
-     * Copies an existing blob's contents, properties, and metadata to this instance of the <code>CloudBlob</code>
-     * class, using the specified access conditions, lease ID, request options, and operation context.
+     * Copies an existing blob's contents, properties, and metadata to a new blob, using the specified access
+     * conditions, lease ID, request options, and operation context.
      * 
      * @param source
      *            A <code>URI</code> The URI of a source blob.
@@ -547,6 +550,7 @@ public abstract class CloudBlob implements ListBlobItem {
                 }
 
                 blob.updatePropertiesFromResponse(request);
+                blob.copyState = BaseResponse.getCopyState(request);
 
                 return null;
             }
@@ -554,6 +558,166 @@ public abstract class CloudBlob implements ListBlobItem {
 
         ExecutionEngine
                 .executeWithRetry(this.blobServiceClient, this, impl, options.getRetryPolicyFactory(), opContext);
+    }
+
+    /**
+     * Copies an existing blob's contents, properties, and metadata to this instance of the <code>CloudBlob</code>
+     * class.
+     * This method returns when the copy blob operation is completed.
+     * 
+     * It fetches the blob's ETag, last modified time, and part of the copy state.
+     * The copy ID and copy status fields are fetched, and the rest of the copy state is cleared.
+     * 
+     * @param sourceBlob
+     *            A <code>CloudBlob</code> object that represents the source blob to copy.
+     * 
+     * @throws StorageException
+     *             If a storage service error occurred.
+     * @throws URISyntaxException
+     * @throws InterruptedException
+     */
+    @DoesServiceRequest
+    public final void copyFromBlobWaitUntilComplete(final CloudBlob sourceBlob) throws StorageException,
+            URISyntaxException, InterruptedException {
+        this.copyFromBlobWaitUntilComplete(sourceBlob, null, null, null, null, null, null);
+    }
+
+    /**
+     * Copies an existing blob's contents, properties, and metadata to this instance of the <code>CloudBlob</code>
+     * class, using the specified access conditions, lease ID, request options, and operation context.
+     * This method returns when the copy blob operation is completed.
+     * 
+     * It fetches the blob's ETag, last modified time, and part of the copy state.
+     * The copy ID and copy status fields are fetched, and the rest of the copy state is cleared.
+     * 
+     * @param sourceBlob
+     *            A <code>CloudBlob</code> object that represents the source blob to copy.
+     * @param pollingIntervalInSeconds
+     *            A <code>Integer</code> object that represents the amount of time to wait between attempts to poll
+     *            for completion.
+     *            If it's null, the default polling policy will be used.
+     * @param maxTimeToWaitInSeconds
+     *            A <code>Integer</code> object that represents the maximum time to allow for the copy to complete.
+     *            If it's null, the default max wait time will be used.
+     * @param sourceAccessCondition
+     *            An {@link AccessCondition} object that represents the access conditions for the source blob.
+     * @param destinationAccessCondition
+     *            An {@link AccessCondition} object that represents the access conditions for the destination blob.
+     * @param options
+     *            A {@link BlobRequestOptions} object that specifies any additional options for the request. Specifying
+     *            <code>null</code> will use the default request options from the associated service client (
+     *            {@link CloudBlobClient}).
+     * @param opContext
+     *            An {@link OperationContext} object that represents the context for the current operation. This object
+     *            is used to track requests to the storage service, and to provide additional runtime information about
+     *            the operation.
+     * 
+     * @throws StorageException
+     *             If a storage service error occurred.
+     * @throws URISyntaxException
+     * @throws InterruptedException
+     * 
+     */
+    @DoesServiceRequest
+    public final void copyFromBlobWaitUntilComplete(final CloudBlob sourceBlob, Integer pollingIntervalInSeconds,
+            Integer maxTimeToWaitInSeconds, final AccessCondition sourceAccessCondition,
+            final AccessCondition destinationAccessCondition, BlobRequestOptions options, OperationContext opContext)
+            throws StorageException, URISyntaxException, InterruptedException {
+        this.copyFromBlobWaitUntilComplete(sourceBlob.uri, pollingIntervalInSeconds, maxTimeToWaitInSeconds,
+                sourceAccessCondition, destinationAccessCondition, options, opContext);
+
+    }
+
+    /**
+     * Copies a blob's contents, properties, and metadata to a new blob.
+     * This method returns when the copy blob operation is completed.
+     * 
+     * It fetches the blob's ETag, last modified time, and part of the copy state.
+     * The copy ID and copy status fields are fetched, and the rest of the copy state is cleared.
+     * 
+     * @param source
+     *            A <code>URI</code> The URI of a source blob.
+     * 
+     * @throws StorageException
+     *             If a storage service error occurred.
+     * @throws InterruptedException
+     */
+    @DoesServiceRequest
+    public final void copyFromBlobWaitUntilComplete(final URI source) throws StorageException, InterruptedException {
+        this.copyFromBlobWaitUntilComplete(source, null, null, null, null, null, null);
+    }
+
+    /**
+     * Copies a blob's contents, properties, and metadata to a new blob.
+     * This method returns when the copy blob operation is completed.
+     * 
+     * It fetches the blob's ETag, last modified time, and part of the copy state.
+     * The copy ID and copy status fields are fetched, and the rest of the copy state is cleared.
+     * 
+     * @param source
+     *            A <code>URI</code> The URI of a source blob.
+     * @param pollingIntervalInSeconds
+     *            A <code>Integer</code> object that represents the amount of time to wait between attempts to poll
+     *            for completion.
+     *            If it's null, the default polling policy will be used.
+     * @param maxTimeToWaitInSeconds
+     *            A <code>Integer</code> object that represents the maximum time to allow for the copy to complete.
+     *            If it's null, the default max wait time will be used.
+     * @param sourceAccessCondition
+     *            An {@link AccessCondition} object that represents the access conditions for the source blob.
+     * @param destinationAccessCondition
+     *            An {@link AccessCondition} object that represents the access conditions for the destination blob.
+     * @param options
+     *            A {@link BlobRequestOptions} object that specifies any additional options for the request. Specifying
+     *            <code>null</code> will use the default request options from the associated service client (
+     *            {@link CloudBlobClient}).
+     * @param opContext
+     *            An {@link OperationContext} object that represents the context for the current operation. This object
+     *            is used to track requests to the storage service, and to provide additional runtime information about
+     *            the operation.
+     * 
+     * @throws StorageException
+     *             If a storage service error occurred.
+     * @throws InterruptedException
+     * 
+     */
+    @DoesServiceRequest
+    public final void copyFromBlobWaitUntilComplete(final URI source, Integer pollingIntervalInSeconds,
+            Integer maxTimeToWaitInSeconds, final AccessCondition sourceAccessCondition,
+            final AccessCondition destinationAccessCondition, BlobRequestOptions options, OperationContext opContext)
+            throws StorageException, InterruptedException {
+        if (pollingIntervalInSeconds == null) {
+            pollingIntervalInSeconds = BlobConstants.DEFAULT_POLLING_INTERVAL_IN_SECONDS;
+        }
+
+        if (maxTimeToWaitInSeconds == null) {
+            maxTimeToWaitInSeconds = BlobConstants.DEFAULT_COPY_TIMEOUT_IN_SECONDS;
+        }
+
+        this.copyFromBlob(source, sourceAccessCondition, destinationAccessCondition, options, opContext);
+        Calendar now = GregorianCalendar.getInstance();
+        now.add(Calendar.SECOND, maxTimeToWaitInSeconds - pollingIntervalInSeconds);
+        Date stopTimeOfLastPolling = now.getTime();
+        BlobRequestOptions pollingRequestOptions = null;
+        if (options != null) {
+            pollingRequestOptions = new BlobRequestOptions(options);
+        }
+        else {
+            pollingRequestOptions = new BlobRequestOptions();
+        }
+
+        pollingRequestOptions.setRetryPolicyFactory(new RetryLinearRetry(pollingIntervalInSeconds,
+                RetryPolicy.DEFAULT_CLIENT_RETRY_COUNT));
+
+        while (this.copyState.getStatus() == CopyStatus.PENDING) {
+            this.downloadAttributes(null, pollingRequestOptions, opContext);
+            if (stopTimeOfLastPolling.before(new Date())) {
+                break;
+            }
+            else {
+                Thread.sleep(pollingIntervalInSeconds * 1000);
+            }
+        }
     }
 
     /**

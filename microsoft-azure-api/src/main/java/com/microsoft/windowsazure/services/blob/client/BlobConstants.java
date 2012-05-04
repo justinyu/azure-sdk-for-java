@@ -305,6 +305,16 @@ final class BlobConstants {
     public static final String UNCOMMITTED_ELEMENT = "Uncommitted";
 
     /**
+     * The default timeout of a copy operation.
+     */
+    public static final int DEFAULT_COPY_TIMEOUT_IN_SECONDS = 3600;
+
+    /**
+     * The default polling interval of a copy operation.
+     */
+    public static final int DEFAULT_POLLING_INTERVAL_IN_SECONDS = 30;
+
+    /**
      * Private Default Ctor
      */
     private BlobConstants() {
