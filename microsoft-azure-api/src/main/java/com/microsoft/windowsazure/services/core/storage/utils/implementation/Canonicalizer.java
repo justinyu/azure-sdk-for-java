@@ -327,10 +327,8 @@ abstract class Canonicalizer {
                     stringValue.append(",");
                 }
 
-                stringValue.append(value);
+                canonicalizedResource.append(value);
             }
-
-            appendCanonicalizedElement(canonicalizedResource, stringValue.toString());
         }
 
         return canonicalizedResource.toString();
