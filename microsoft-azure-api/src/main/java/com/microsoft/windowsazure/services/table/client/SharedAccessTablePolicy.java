@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.microsoft.windowsazure.services.blob.client;
+package com.microsoft.windowsazure.services.table.client;
 
 import java.util.Date;
 import java.util.EnumSet;
@@ -23,7 +23,7 @@ import com.microsoft.windowsazure.services.core.storage.Constants;
  * Represents a shared access policy, which specifies the start time, expiry time, and permissions for a shared access
  * signature.
  */
-public final class SharedAccessPolicy {
+public final class SharedAccessTablePolicy {
 
     /**
      * Assigns shared access permissions using the specified permissions string.
@@ -39,26 +39,26 @@ public final class SharedAccessPolicy {
      *            <li><code>w</code>: Write access.</li>
      *            </ul>
      * 
-     * @return A <code>java.util.EnumSet</code> object that contains {@link SharedAccessPermissions} values that
+     * @return A <code>java.util.EnumSet</code> object that contains {@link SharedAccessTablePermissions} values that
      *         represents the set of shared access permissions.
      */
-    public static EnumSet<SharedAccessPermissions> permissionsFromString(final String value) {
+    public static EnumSet<SharedAccessTablePermissions> permissionsFromString(final String value) {
         final char[] chars = value.toCharArray();
-        final EnumSet<SharedAccessPermissions> retSet = EnumSet.noneOf(SharedAccessPermissions.class);
+        final EnumSet<SharedAccessTablePermissions> retSet = EnumSet.noneOf(SharedAccessTablePermissions.class);
 
         for (final char c : chars) {
             switch (c) {
                 case 'r':
-                    retSet.add(SharedAccessPermissions.READ);
+                    retSet.add(SharedAccessTablePermissions.QUREY);
                     break;
-                case 'w':
-                    retSet.add(SharedAccessPermissions.WRITE);
+                case 'a':
+                    retSet.add(SharedAccessTablePermissions.ADD);
+                    break;
+                case 'u':
+                    retSet.add(SharedAccessTablePermissions.UPDATE);
                     break;
                 case 'd':
-                    retSet.add(SharedAccessPermissions.DELETE);
-                    break;
-                case 'l':
-                    retSet.add(SharedAccessPermissions.LIST);
+                    retSet.add(SharedAccessTablePermissions.DELETE);
                     break;
                 default:
                     throw new IllegalArgumentException("value");
@@ -72,12 +72,12 @@ public final class SharedAccessPolicy {
      * Converts the permissions specified for the shared access policy to a string.
      * 
      * @param permissions
-     *            A {@link SharedAccessPermissions} object that represents the shared access permissions.
+     *            A {@link SharedAccessTablePermissions} object that represents the shared access permissions.
      * 
      * @return A <code>String</code> that represents the shared access permissions in the "rwdl" format, which is
-     *         described at {@link SharedAccessPolicy#permissionsFromString}.
+     *         described at {@link SharedAccessTablePermissions#permissionsFromString}.
      */
-    public static String permissionsToString(final EnumSet<SharedAccessPermissions> permissions) {
+    public static String permissionsToString(final EnumSet<SharedAccessTablePermissions> permissions) {
         if (permissions == null) {
             return Constants.EMPTY_STRING;
         }
@@ -85,20 +85,20 @@ public final class SharedAccessPolicy {
         // The service supports a fixed order => rwdl
         final StringBuilder builder = new StringBuilder();
 
-        if (permissions.contains(SharedAccessPermissions.READ)) {
+        if (permissions.contains(SharedAccessTablePermissions.QUREY)) {
             builder.append("r");
         }
 
-        if (permissions.contains(SharedAccessPermissions.WRITE)) {
-            builder.append("w");
+        if (permissions.contains(SharedAccessTablePermissions.ADD)) {
+            builder.append("a");
         }
 
-        if (permissions.contains(SharedAccessPermissions.DELETE)) {
+        if (permissions.contains(SharedAccessTablePermissions.UPDATE)) {
+            builder.append("u");
+        }
+
+        if (permissions.contains(SharedAccessTablePermissions.DELETE)) {
             builder.append("d");
-        }
-
-        if (permissions.contains(SharedAccessPermissions.LIST)) {
-            builder.append("l");
         }
 
         return builder.toString();
@@ -107,7 +107,7 @@ public final class SharedAccessPolicy {
     /**
      * The permissions for a shared access signature associated with this shared access policy.
      */
-    private EnumSet<SharedAccessPermissions> permissions;
+    private EnumSet<SharedAccessTablePermissions> permissions;
 
     /**
      * The expiry time for a shared access signature associated with this shared access policy.
@@ -120,16 +120,16 @@ public final class SharedAccessPolicy {
     private Date sharedAccessStartTime;
 
     /**
-     * Creates an instance of the <code>SharedAccessPolicy</code> class.
+     * Creates an instance of the <code>SharedAccessTablePolicy</code> class.
      * */
-    public SharedAccessPolicy() {
+    public SharedAccessTablePolicy() {
         // Empty Default Ctor
     }
 
     /**
      * @return the permissions
      */
-    public EnumSet<SharedAccessPermissions> getPermissions() {
+    public EnumSet<SharedAccessTablePermissions> getPermissions() {
         return this.permissions;
     }
 
@@ -151,7 +151,7 @@ public final class SharedAccessPolicy {
      * @param permissions
      *            the permissions to set
      */
-    public void setPermissions(final EnumSet<SharedAccessPermissions> permissions) {
+    public void setPermissions(final EnumSet<SharedAccessTablePermissions> permissions) {
         this.permissions = permissions;
     }
 

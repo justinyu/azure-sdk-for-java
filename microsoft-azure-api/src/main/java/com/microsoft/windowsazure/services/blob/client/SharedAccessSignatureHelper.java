@@ -44,7 +44,7 @@ final class SharedAccessSignatureHelper {
      * @throws IllegalArgumentException
      * @throws StorageException
      */
-    protected static UriQueryBuilder generateSharedAccessSignature(final SharedAccessPolicy policy,
+    protected static UriQueryBuilder generateSharedAccessSignature(final SharedAccessBlobPolicy policy,
             final String groupPolicyIdentifier, final String resourceType, final String signature)
             throws StorageException {
         Utility.assertNotNullOrEmpty("resourceType", resourceType);
@@ -52,7 +52,7 @@ final class SharedAccessSignatureHelper {
 
         final UriQueryBuilder builder = new UriQueryBuilder();
         if (policy != null) {
-            String permissions = SharedAccessPolicy.permissionsToString(policy.getPermissions());
+            String permissions = SharedAccessBlobPolicy.permissionsToString(policy.getPermissions());
 
             if (Utility.isNullOrEmpty(permissions)) {
                 permissions = null;
@@ -103,7 +103,7 @@ final class SharedAccessSignatureHelper {
      * @throws InvalidKeyException
      * @throws StorageException
      */
-    protected static String generateSharedAccessSignatureHash(final SharedAccessPolicy policy,
+    protected static String generateSharedAccessSignatureHash(final SharedAccessBlobPolicy policy,
             final String groupPolicyIdentifier, final String resourceName, final CloudBlobClient client,
             final OperationContext opContext) throws InvalidKeyException, StorageException {
         Utility.assertNotNullOrEmpty("resourceName", resourceName);
@@ -128,7 +128,7 @@ final class SharedAccessSignatureHelper {
             }
 
             stringToSign = String.format("%s\n%s\n%s\n%s\n%s",
-                    SharedAccessPolicy.permissionsToString(policy.getPermissions()),
+                    SharedAccessBlobPolicy.permissionsToString(policy.getPermissions()),
                     Utility.getUTCTimeOrEmpty(policy.getSharedAccessStartTime()),
                     Utility.getUTCTimeOrEmpty(policy.getSharedAccessExpiryTime()), resourceName,
                     groupPolicyIdentifier == null ? Constants.EMPTY_STRING : groupPolicyIdentifier);

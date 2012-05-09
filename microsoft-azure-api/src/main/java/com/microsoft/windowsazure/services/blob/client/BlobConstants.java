@@ -64,11 +64,6 @@ final class BlobConstants {
     }
 
     /**
-     * XML element for an access policy.
-     */
-    public static final String ACCESS_POLICY = "AccessPolicy";
-
-    /**
      * XML element for authentication error details.
      */
     public static final String AUTHENTICATION_ERROR_DETAIL = "AuthenticationErrorDetail";
@@ -205,11 +200,6 @@ final class BlobConstants {
     public static final int DEFAULT_WRITE_BLOCK_SIZE_IN_BYTES = 4 * com.microsoft.windowsazure.services.core.storage.Constants.MB;
 
     /**
-     * XML element for the end time of an access policy.
-     */
-    public static final String EXPIRY = "Expiry";
-
-    /**
      * Specifies snapshots are to be included.
      */
     public static final String INCLUDE_SNAPSHOTS_VALUE = "include";
@@ -218,11 +208,6 @@ final class BlobConstants {
      * XML element for the latest.
      */
     public static final String LATEST_ELEMENT = "Latest";
-
-    /**
-     * Maximum number of shared access policy identifiers supported by server.
-     */
-    public static final int MAX_SHARED_ACCESS_POLICY_IDENTIFIERS = 5;
 
     /**
      * The maximum size, in bytes, of a blob before it must be separated into blocks
@@ -262,11 +247,6 @@ final class BlobConstants {
             + "page-write";
 
     /**
-     * XML element for the permission of an access policy.
-     */
-    public static final String PERMISSION = "Permission";
-
-    /**
      * XML element for properties.
      */
     public static final String PROPERTIES = "Properties";
@@ -276,16 +256,6 @@ final class BlobConstants {
      */
     public static final String SEQUENCE_NUMBER = com.microsoft.windowsazure.services.core.storage.Constants.PREFIX_FOR_STORAGE_HEADER
             + "blob-sequence-number";
-
-    /**
-     * XML element for a signed identifier.
-     */
-    public static final String SIGNED_IDENTIFIER_ELEMENT = "SignedIdentifier";
-
-    /**
-     * XML element for signed identifiers.
-     */
-    public static final String SIGNED_IDENTIFIERS_ELEMENT = "SignedIdentifiers";
 
     /**
      * The header for the blob content length.
@@ -320,11 +290,6 @@ final class BlobConstants {
     public static final String SNAPSHOTS_ONLY_VALUE = "only";
 
     /**
-     * XML element for the start time of an access policy.
-     */
-    public static final String START = "Start";
-
-    /**
      * XML element for page range start elements.
      */
     public static final String START_ELEMENT = "Start";
@@ -338,6 +303,16 @@ final class BlobConstants {
      * XML element for uncommitted blocks.
      */
     public static final String UNCOMMITTED_ELEMENT = "Uncommitted";
+
+    /**
+     * The default timeout of a copy operation.
+     */
+    public static final int DEFAULT_COPY_TIMEOUT_IN_SECONDS = 3600;
+
+    /**
+     * The default polling interval of a copy operation.
+     */
+    public static final int DEFAULT_POLLING_INTERVAL_IN_SECONDS = 30;
 
     /**
      * Private Default Ctor
