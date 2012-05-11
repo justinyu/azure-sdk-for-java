@@ -159,7 +159,7 @@ final class BlobRequest {
         request.setDoOutput(true);
         request.setRequestMethod("PUT");
 
-        request.setRequestProperty("ms-copy-action", "abort");
+        request.setRequestProperty("x-ms-copy-action", "abort");
 
         if (accessCondition != null) {
             accessCondition.applyConditionToRequest(request, true);

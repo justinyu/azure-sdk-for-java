@@ -54,7 +54,7 @@ public final class CloudTable {
      * Creates an instance of the <code>CloudTable</code> class using the specified address and client.
      * 
      * @param tableAddress
-     *            A <code>String</code> that represents either the absolute URI to the table, or the table name.
+     *            A <code>String</code> that represents the table name.
      * @param client
      *            A {@link CloudTableClient} object that represents the associated service client, and that specifies
      *            the endpoint for the Table service.
@@ -62,8 +62,8 @@ public final class CloudTable {
      * @throws URISyntaxException
      *             If the resource URI is invalid.
      */
-    public CloudTable(final String tableAddress, final CloudTableClient client) throws URISyntaxException {
-        this(PathUtility.appendPathToUri(client.getEndpoint(), tableAddress), client);
+    public CloudTable(final String tableName, final CloudTableClient client) throws URISyntaxException {
+        this(PathUtility.appendPathToUri(client.getEndpoint(), tableName), client);
     }
 
     /**
@@ -521,7 +521,6 @@ public final class CloudTable {
         opContext.initialize();
         options.applyDefaults(this.tableServiceClient);
         final String tableName = this.name;
-        final TableRequestOptions tableRequestOptions = options;
 
         final StorageOperation<CloudTableClient, CloudTable, TablePermissions> impl = new StorageOperation<CloudTableClient, CloudTable, TablePermissions>(
                 options) {
