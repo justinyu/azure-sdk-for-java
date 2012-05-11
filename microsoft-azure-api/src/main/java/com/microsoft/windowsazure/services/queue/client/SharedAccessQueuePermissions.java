@@ -32,19 +32,19 @@ public enum SharedAccessQueuePermissions {
     READ((byte) 0x1),
 
     /**
-     * Permission to get and delete messages granted.
-     */
-    PROCESSMESSAGES((byte) 0x2),
-
-    /**
      * Permission to add messages granted.
      */
-    ADD((byte) 0x4),
+    ADD((byte) 0x2),
 
     /**
      * Permissions to update messages granted.
      */
-    UPDATE((byte) 0x8);
+    UPDATE((byte) 0x4),
+
+    /**
+     * Permission to get and delete messages granted.
+     */
+    PROCESSMESSAGES((byte) 0x8);
 
     /**
      * Returns the enum set representing the shared access permissions for the specified byte value.

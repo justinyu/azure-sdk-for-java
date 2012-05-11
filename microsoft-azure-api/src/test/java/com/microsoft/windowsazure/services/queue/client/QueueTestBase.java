@@ -14,6 +14,7 @@
  */
 package com.microsoft.windowsazure.services.queue.client;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.util.UUID;
@@ -36,6 +37,7 @@ public class QueueTestBase {
     protected static CloudStorageAccount httpAcc;
     protected static CloudQueueClient qClient;
     protected static String testSuiteQueueName = generateRandomQueueName();
+    protected static CloudQueue queue;
 
     @BeforeClass
     public static void setup() throws URISyntaxException, StorageException, InvalidKeyException {
@@ -55,7 +57,7 @@ public class QueueTestBase {
 
         qClient = httpAcc.createCloudQueueClient();
         testSuiteQueueName = generateRandomQueueName();
-        CloudQueue queue = qClient.getQueueReference(testSuiteQueueName);
+        queue = qClient.getQueueReference(testSuiteQueueName);
         queue.create();
     }
 
@@ -68,5 +70,18 @@ public class QueueTestBase {
     protected static String generateRandomQueueName() {
         String queueName = "queue" + UUID.randomUUID().toString();
         return queueName.replace("-", "");
+    }
+
+    static String AppendQueueName(URI baseURI, String queueName) throws URISyntaxException {
+        if (baseURI == null)
+            return queueName;
+
+        String baseAddress = baseURI.toString();
+        if (baseAddress.endsWith("/")) {
+            return baseAddress + queueName;
+        }
+        else {
+            return baseAddress + "/" + queueName;
+        }
     }
 }
