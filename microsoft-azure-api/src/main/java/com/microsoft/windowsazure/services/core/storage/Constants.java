@@ -331,6 +331,81 @@ public final class Constants {
     }
 
     /**
+     * Defines constants for use with query strings.
+     */
+    public static class QueryConstants {
+        /**
+         * The query component for the SAS signature.
+         */
+        public static final String SIGNATURE = "sig";
+
+        /**
+         * The query component for the signed SAS expiry time.
+         */
+        public static final String SIGNED_EXPIRY = "se";
+
+        /**
+         * The query component for the signed SAS identifier.
+         */
+        public static final String SIGNED_IDENTIFIER = "si";
+
+        /**
+         * The query component for the signed SAS permissions.
+         */
+        public static final String SIGNED_PERMISSIONS = "sp";
+
+        /**
+         * The query component for the signed SAS resource.
+         */
+        public static final String SIGNED_RESOURCE = "sr";
+
+        /**
+         * The query component for the signed SAS start time.
+         */
+        public static final String SIGNED_START = "st";
+
+        /**
+         * The query component for the SAS start partition key.
+         */
+        public static final String START_PARTITION_KEY = "spk";
+
+        /**
+         * The query component for the SAS start row key.
+         */
+        public static final String START_ROW_KEY = "srk";
+
+        /**
+         * The query component for the SAS end partition key.
+         */
+        public static final String END_PARTITION_KEY = "epk";
+
+        /**
+         * The query component for the SAS end row key.
+         */
+        public static final String END_ROW_KEY = "erk";
+
+        /**
+         * The query component for the SAS table name.
+         */
+        public static final String SAS_TABLE_NAME = "tn";
+
+        /**
+         * The query component for the signing SAS key.
+         */
+        public static final String SIGNED_KEY = "sk";
+
+        /**
+         * The query component for the signed SAS version.
+         */
+        public static final String SIGNED_VERSION = "sv";
+
+        /**
+         * The query component for snapshot time.
+         */
+        public static final String SNAPSHOT = "snapshot";
+    }
+
+    /**
      * The master Windows Azure Storage header prefix.
      */
     public static final String PREFIX_FOR_STORAGE_HEADER = "x-ms-";

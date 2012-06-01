@@ -15,14 +15,18 @@
 package com.microsoft.windowsazure.services.blob.client;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import junit.framework.Assert;
@@ -31,6 +35,7 @@ import org.junit.Test;
 
 import com.microsoft.windowsazure.services.core.storage.AccessCondition;
 import com.microsoft.windowsazure.services.core.storage.OperationContext;
+import com.microsoft.windowsazure.services.core.storage.StorageCredentialsSharedAccessSignature;
 import com.microsoft.windowsazure.services.core.storage.StorageErrorCodeStrings;
 import com.microsoft.windowsazure.services.core.storage.StorageException;
 
@@ -38,6 +43,85 @@ import com.microsoft.windowsazure.services.core.storage.StorageException;
  * Table Client Tests
  */
 public class CloudBlobContainerTests extends BlobTestBase {
+    /**
+     * test SharedAccess of container. Verify if: - SAS container can get
+     * correct parent blob client - SAS container is associated with correct SAS
+     * account
+     * 
+     * @author mfan
+     * @throws StorageException
+     * @throws IllegalArgumentException
+     * @throws InvalidKeyException
+     * @throws URISyntaxException
+     * @throws IOException
+     * @XSCLCaseName ContainerInfoSharedAccess
+     */
+    @Test
+    public void testContainerSharedAccess() throws InvalidKeyException, IllegalArgumentException, StorageException,
+            URISyntaxException, IOException {
+
+        String name = this.generateRandomContainerName();
+        CloudBlobContainer container = bClient.getContainerReference(name);
+        container.create();
+
+        CloudBlockBlob blob = container.getBlockBlobReference("test");
+        blob.upload(new ByteArrayInputStream(new byte[100]), 100);
+
+        SharedAccessBlobPolicy sp1 = createSharedAccessPolicy(
+                EnumSet.of(SharedAccessBlobPermissions.READ, SharedAccessBlobPermissions.WRITE,
+                        SharedAccessBlobPermissions.LIST, SharedAccessBlobPermissions.DELETE), 300);
+        SharedAccessBlobPolicy sp2 = createSharedAccessPolicy(
+                EnumSet.of(SharedAccessBlobPermissions.READ, SharedAccessBlobPermissions.LIST), 300);
+        BlobContainerPermissions perms = new BlobContainerPermissions();
+        //perms.setPublicAccess(BlobContainerPublicAccessType.CONTAINER);
+
+        perms.getSharedAccessPolicies().put("full", sp1);
+        perms.getSharedAccessPolicies().put("readlist", sp2);
+        container.uploadPermissions(perms);
+
+        String containerReadListSas = container.generateSharedAccessSignature(sp2);
+        CloudBlobContainer readListContainer = bClient.getContainerReference(container.getUri().toString() + "?"
+                + containerReadListSas);
+        Assert.assertEquals(StorageCredentialsSharedAccessSignature.class.toString(), readListContainer
+                .getServiceClient().getCredentials().getClass().toString());
+
+        //readListContainer.downloadAttributes();
+
+        CloudBlockBlob sasBlob = readListContainer.getBlockBlobReference("test");
+        sasBlob.download(new ByteArrayOutputStream()); // exception
+        /*
+             for (ListBlobItem b : readListContainer.listBlobs()) {
+                    try {
+                        ((CloudBlob) b).delete();
+                        Assert.fail("Cannot delete a blob because container has ACL of read list only");
+                    }
+                    catch (StorageException e) {
+                    }
+                }
+
+                String containerFullSas = container.generateSharedAccessSignature(sp1);
+                CloudBlobContainer fullPermissionContainer = bClient.getContainerReference(container.getUri().toString() + "?"
+                        + containerFullSas);
+                Assert.assertEquals(StorageCredentialsSharedAccessSignature.class.toString(), fullPermissionContainer
+                        .getServiceClient().getCredentials().getClass().toString());
+                for (ListBlobItem b : fullPermissionContainer.listBlobs()) {
+                    ((CloudBlob) b).delete();
+                }*/
+    }
+
+    public final static SharedAccessBlobPolicy createSharedAccessPolicy(EnumSet<SharedAccessBlobPermissions> sap,
+            int expireTimeInSeconds) {
+
+        Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        cal.setTime(new Date());
+        cal.add(Calendar.SECOND, expireTimeInSeconds);
+        SharedAccessBlobPolicy policy = new SharedAccessBlobPolicy();
+        policy.setPermissions(sap);
+        policy.setSharedAccessExpiryTime(cal.getTime());
+        return policy;
+
+    }
+
     @Test
     public void testContainerGetSetPermission() throws StorageException, URISyntaxException {
         String name = this.generateRandomContainerName();

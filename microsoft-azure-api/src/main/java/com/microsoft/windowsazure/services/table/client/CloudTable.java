@@ -19,13 +19,18 @@ import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
 
 import com.microsoft.windowsazure.services.blob.client.BlobContainerPermissions;
+import com.microsoft.windowsazure.services.blob.core.storage.SharedAccessSignatureHelper;
 import com.microsoft.windowsazure.services.core.storage.DoesServiceRequest;
 import com.microsoft.windowsazure.services.core.storage.OperationContext;
+import com.microsoft.windowsazure.services.core.storage.StorageCredentials;
+import com.microsoft.windowsazure.services.core.storage.StorageCredentialsAccountAndKey;
 import com.microsoft.windowsazure.services.core.storage.StorageErrorCodeStrings;
 import com.microsoft.windowsazure.services.core.storage.StorageException;
 import com.microsoft.windowsazure.services.core.storage.utils.PathUtility;
+import com.microsoft.windowsazure.services.core.storage.utils.UriQueryBuilder;
 import com.microsoft.windowsazure.services.core.storage.utils.Utility;
 import com.microsoft.windowsazure.services.core.storage.utils.implementation.ExecutionEngine;
 import com.microsoft.windowsazure.services.core.storage.utils.implementation.StorageOperation;
@@ -49,6 +54,33 @@ public final class CloudTable {
      * Holds a reference to the associated service client.
      */
     private final CloudTableClient tableServiceClient;
+
+    /**
+     * Gets the name of the queue.
+     * 
+     * @return A <code>String</code> object that represents the name of the queue.
+     */
+    public String getName() {
+        return this.name;
+    }
+
+    /**
+     * Gets the table service client associated with this queue.
+     * 
+     * @return A {@link CloudTableClient} object that represents the service client associated with this table.
+     */
+    public CloudTableClient getServiceClient() {
+        return this.tableServiceClient;
+    }
+
+    /**
+     * Gets the absolute URI for this queue.
+     * 
+     * @return A <code>java.net.URI</code> object that represents the URI for this queue.
+     */
+    public URI getUri() {
+        return this.uri;
+    }
 
     /**
      * Creates an instance of the <code>CloudTable</code> class using the specified address and client.
@@ -451,7 +483,7 @@ public final class CloudTable {
             public Void execute(final CloudTableClient client, final CloudTable table, final OperationContext opContext)
                     throws Exception {
 
-                final HttpURLConnection request = TableRequest.setAcl(table.uri, tableName, this.getRequestOptions()
+                final HttpURLConnection request = TableRequest.setAcl(table.uri, this.getRequestOptions()
                         .getTimeoutIntervalInMs(), opContext);
 
                 final StringWriter outBuffer = new StringWriter();
@@ -552,5 +584,62 @@ public final class CloudTable {
 
         return ExecutionEngine.executeWithRetry(this.tableServiceClient, this, impl, options.getRetryPolicyFactory(),
                 opContext);
+    }
+
+    /**
+     * Returns a shared access signature for the table.
+     * 
+     * @param policy
+     *            The access policy for the shared access signature.
+     * @param accessPolicyIdentifier
+     *            A table-level access policy.
+     * @return a shared access signature for the container.
+     * @throws InvalidKeyException
+     * @throws StorageException
+     * @throws IllegalArgumentException
+     */
+    public String generateSharedAccessSignature(final SharedAccessTablePolicy policy,
+            final String accessPolicyIdentifier, final String startPartitionKey, final String startRowKey,
+            final String endPartitionKey, final String endRowKey, OperationContext opContext)
+            throws InvalidKeyException, StorageException {
+
+        if (!this.tableServiceClient.getCredentials().canCredentialsSignRequest()) {
+            final String errorMessage = "Cannot create Shared Access Signature unless the Account Key credentials are used by the BlobServiceClient.";
+            throw new IllegalArgumentException(errorMessage);
+        }
+
+        final String resourceName = this.getSharedAccessCanonicalName();
+
+        final String signature = SharedAccessSignatureHelper.generateSharedAccessSignatureHash(policy,
+                accessPolicyIdentifier, resourceName, startPartitionKey, startRowKey, endPartitionKey, endRowKey,
+                this.tableServiceClient, opContext);
+
+        String accountKeyName = null;
+        StorageCredentials credentials = this.tableServiceClient.getCredentials();
+
+        if (credentials instanceof StorageCredentialsAccountAndKey) {
+            accountKeyName = ((StorageCredentialsAccountAndKey) credentials).getAccountKeyName();
+        }
+
+        final UriQueryBuilder builder = SharedAccessSignatureHelper.generateSharedAccessSignature(policy,
+                startPartitionKey, startRowKey, endPartitionKey, endRowKey, accessPolicyIdentifier, this.name,
+                signature, accountKeyName);
+
+        return builder.toString();
+    }
+
+    /**
+     * Returns the canonical name for shared access.
+     * 
+     * @return the canonical name for shared access.
+     */
+    private String getSharedAccessCanonicalName() {
+        if (this.tableServiceClient.isUsePathStyleUris()) {
+            return this.getUri().getPath();
+        }
+        else {
+            return PathUtility.getCanonicalPathFromCredentials(this.tableServiceClient.getCredentials(), this.getUri()
+                    .getPath());
+        }
     }
 }

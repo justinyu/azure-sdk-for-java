@@ -797,7 +797,7 @@ public final class CloudTableClient extends ServiceClient {
             Utility.assertNotNull("Query requires a valid class type or resolver.", queryToExecute.getClazzType());
         }
 
-        final HttpURLConnection queryRequest = TableRequest.query(this.getEndpoint(),
+        final HttpURLConnection queryRequest = TableRequest.query(this.getTransformedEndPoint(opContext),
                 queryToExecute.getSourceTableName(), null/* identity */, options.getTimeoutIntervalInMs(),
                 queryToExecute.generateQueryBuilder(), continuationToken, options, opContext);
 
@@ -895,6 +895,23 @@ public final class CloudTableClient extends ServiceClient {
             }
         };
         return ExecutionEngine.executeWithRetry(this, queryToExecute, impl, options.getRetryPolicyFactory(), opContext);
+    }
+
+    protected final URI getTransformedEndPoint(final OperationContext opContext) throws URISyntaxException,
+            StorageException {
+        if (this.getCredentials().doCredentialsNeedTransformUri()) {
+            if (this.getEndpoint().isAbsolute()) {
+                return this.getCredentials().transformUri(this.getEndpoint(), opContext);
+            }
+            else {
+                final StorageException ex = Utility.generateNewUnexpectedStorageException(null);
+                ex.getExtendedErrorInformation().setErrorMessage("Table Object relative URIs not supported.");
+                throw ex;
+            }
+        }
+        else {
+            return this.getEndpoint();
+        }
     }
 
     /**

@@ -17,9 +17,12 @@ package com.microsoft.windowsazure.services.table.client;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.EnumSet;
 import java.util.GregorianCalendar;
@@ -31,6 +34,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import com.microsoft.windowsazure.services.core.storage.ResultSegment;
+import com.microsoft.windowsazure.services.core.storage.StorageCredentialsSharedAccessSignature;
 import com.microsoft.windowsazure.services.core.storage.StorageException;
 
 /**
@@ -344,5 +348,135 @@ public class TableClientTests extends TableTestBase {
 
         }
 
+    }
+
+    @Test
+    public void testTableSAS() throws StorageException, URISyntaxException, InvalidKeyException {
+        String name = this.generateRandomTableName();
+        CloudTable table = tClient.getTableReference(name);
+        table.create();
+
+        try {
+            TablePermissions expectedPermissions = new TablePermissions();
+            String identifier = UUID.randomUUID().toString();
+            // Add a policy, check setting and getting.
+            SharedAccessTablePolicy policy1 = new SharedAccessTablePolicy();
+            Calendar now = GregorianCalendar.getInstance();
+            policy1.setSharedAccessStartTime(now.getTime());
+            now.add(Calendar.MINUTE, 10);
+            policy1.setSharedAccessExpiryTime(now.getTime());
+
+            policy1.setPermissions(EnumSet.of(SharedAccessTablePermissions.ADD, SharedAccessTablePermissions.QUREY,
+                    SharedAccessTablePermissions.UPDATE, SharedAccessTablePermissions.DELETE));
+            expectedPermissions.getSharedAccessPolicies().put(identifier, policy1);
+
+            table.uploadPermissions(expectedPermissions);
+
+            // Insert 500 entities in Batches to query
+            for (int i = 0; i < 5; i++) {
+                TableBatchOperation batch = new TableBatchOperation();
+
+                for (int j = 0; j < 100; j++) {
+                    class1 ent = generateRandomEnitity("javatables_batch_" + Integer.toString(i));
+                    ent.setRowKey(String.format("%06d", j));
+                    batch.insert(ent);
+                }
+
+                tClient.execute(name, batch);
+            }
+
+            CloudTableClient tableClientFromIdentifierSAS = getTableForSas(table, null, identifier, null, null, null,
+                    null);
+
+            {
+                class1 randEnt = TableTestBase.generateRandomEnitity(null);
+                TableQuery<class1> query = TableQuery.from(name, class1.class).where(
+                        String.format("(PartitionKey eq '%s') and (RowKey ge '%s')", "javatables_batch_1", "000050"));
+
+                int count = 0;
+
+                for (class1 ent : tableClientFromIdentifierSAS.execute(query)) {
+                    Assert.assertEquals(ent.getA(), randEnt.getA());
+                    Assert.assertEquals(ent.getB(), randEnt.getB());
+                    Assert.assertEquals(ent.getC(), randEnt.getC());
+                    Assert.assertEquals(ent.getPartitionKey(), "javatables_batch_1");
+                    Assert.assertEquals(ent.getRowKey(), String.format("%06d", count + 50));
+                    count++;
+                }
+
+                Assert.assertEquals(count, 50);
+            }
+
+            {
+                class1 baseEntity = new class1();
+                baseEntity.setA("foo_A");
+                baseEntity.setB("foo_B");
+                baseEntity.setC("foo_C");
+                baseEntity.setD(new byte[] { 0, 1, 2 });
+                baseEntity.setPartitionKey("jxscl_odata");
+                baseEntity.setRowKey(UUID.randomUUID().toString());
+
+                class2 secondEntity = new class2();
+                secondEntity.setL("foo_L");
+                secondEntity.setM("foo_M");
+                secondEntity.setN("foo_N");
+                secondEntity.setO("foo_O");
+                secondEntity.setPartitionKey(baseEntity.getPartitionKey());
+                secondEntity.setRowKey(baseEntity.getRowKey());
+                secondEntity.setEtag(baseEntity.getEtag());
+
+                // Insert or merge Entity - ENTITY DOES NOT EXIST NOW.
+                TableResult insertResult = tableClientFromIdentifierSAS.execute(name,
+                        TableOperation.insertOrMerge(baseEntity));
+
+                Assert.assertEquals(insertResult.getHttpStatusCode(), HttpURLConnection.HTTP_NO_CONTENT);
+
+                // Insert or replace Entity - ENTITY EXISTS -> WILL REPLACE
+                tableClientFromIdentifierSAS.execute(name, TableOperation.insertOrMerge(secondEntity));
+
+                // Retrieve entity
+                TableResult queryResult = tableClientFromIdentifierSAS.execute(name, TableOperation.retrieve(
+                        baseEntity.getPartitionKey(), baseEntity.getRowKey(), DynamicTableEntity.class));
+
+                DynamicTableEntity retrievedEntity = queryResult.<DynamicTableEntity> getResultAsType();
+
+                Assert.assertNotNull("Property A", retrievedEntity.getProperties().get("A"));
+                Assert.assertEquals(baseEntity.getA(), retrievedEntity.getProperties().get("A").getValueAsString());
+
+                Assert.assertNotNull("Property B", retrievedEntity.getProperties().get("B"));
+                Assert.assertEquals(baseEntity.getB(), retrievedEntity.getProperties().get("B").getValueAsString());
+
+                Assert.assertNotNull("Property C", retrievedEntity.getProperties().get("C"));
+                Assert.assertEquals(baseEntity.getC(), retrievedEntity.getProperties().get("C").getValueAsString());
+
+                Assert.assertNotNull("Property D", retrievedEntity.getProperties().get("D"));
+                Assert.assertTrue(Arrays.equals(baseEntity.getD(), retrievedEntity.getProperties().get("D")
+                        .getValueAsByteArray()));
+
+                // Validate New properties exist
+                Assert.assertNotNull("Property L", retrievedEntity.getProperties().get("L"));
+                Assert.assertEquals(secondEntity.getL(), retrievedEntity.getProperties().get("L").getValueAsString());
+
+                Assert.assertNotNull("Property M", retrievedEntity.getProperties().get("M"));
+                Assert.assertEquals(secondEntity.getM(), retrievedEntity.getProperties().get("M").getValueAsString());
+
+                Assert.assertNotNull("Property N", retrievedEntity.getProperties().get("N"));
+                Assert.assertEquals(secondEntity.getN(), retrievedEntity.getProperties().get("N").getValueAsString());
+
+                Assert.assertNotNull("Property O", retrievedEntity.getProperties().get("O"));
+                Assert.assertEquals(secondEntity.getO(), retrievedEntity.getProperties().get("O").getValueAsString());
+            }
+        }
+        finally {
+            // cleanup
+            table.deleteIfExists();
+        }
+    }
+
+    private CloudTableClient getTableForSas(CloudTable table, SharedAccessTablePolicy policy, String accessIdentifier,
+            String startPk, String startRk, String endPk, String endRk) throws InvalidKeyException, StorageException {
+        String sasString = table.generateSharedAccessSignature(policy, accessIdentifier, startPk, startRk, endPk,
+                endRk, null);
+        return new CloudTableClient(this.tClient.getEndpoint(), new StorageCredentialsSharedAccessSignature(sasString));
     }
 }

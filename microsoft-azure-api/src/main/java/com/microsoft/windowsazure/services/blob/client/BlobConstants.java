@@ -19,51 +19,6 @@ package com.microsoft.windowsazure.services.blob.client;
  */
 final class BlobConstants {
     /**
-     * Defines constants for use with query strings.
-     */
-    public static class QueryConstants {
-        /**
-         * The query component for the SAS signature.
-         */
-        public static final String SIGNATURE = "sig";
-
-        /**
-         * The query component for the signed SAS expiry time.
-         */
-        public static final String SIGNED_EXPIRY = "se";
-
-        /**
-         * The query component for the signed SAS identifier.
-         */
-        public static final String SIGNED_IDENTIFIER = "si";
-
-        /**
-         * The query component for the signed SAS permissions.
-         */
-        public static final String SIGNED_PERMISSIONS = "sp";
-
-        /**
-         * The query component for the signed SAS resource.
-         */
-        public static final String SIGNED_RESOURCE = "sr";
-
-        /**
-         * The query component for the signed SAS start time.
-         */
-        public static final String SIGNED_START = "st";
-
-        /**
-         * The query component for the signed SAS version.
-         */
-        public static final String SIGNED_VERSION = "sv";
-
-        /**
-         * The query component for snapshot time.
-         */
-        public static final String SNAPSHOT = "snapshot";
-    }
-
-    /**
      * XML element for authentication error details.
      */
     public static final String AUTHENTICATION_ERROR_DETAIL = "AuthenticationErrorDetail";

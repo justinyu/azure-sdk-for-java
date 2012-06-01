@@ -450,8 +450,8 @@ final class TableRequest {
      * @return a HttpURLConnection configured for the operation.
      * @throws StorageException
      * */
-    public static HttpURLConnection setAcl(final URI rootUri, final String tableName, final int timeoutInMs,
-            final OperationContext opContext) throws IOException, URISyntaxException, StorageException {
+    public static HttpURLConnection setAcl(final URI rootUri, final int timeoutInMs, final OperationContext opContext)
+            throws IOException, URISyntaxException, StorageException {
 
         UriQueryBuilder queryBuilder = new UriQueryBuilder();
         queryBuilder.add("comp", "acl");

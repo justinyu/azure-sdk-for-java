@@ -256,9 +256,9 @@ public class TableOperation {
             public TableResult execute(final CloudTableClient client, final TableOperation operation,
                     final OperationContext opContext) throws Exception {
 
-                final HttpURLConnection request = TableRequest.delete(client.getEndpoint(), tableName,
-                        generateRequestIdentity(isTableEntry, tableIdentity), operation.getEntity().getEtag(),
-                        options.getTimeoutIntervalInMs(), null, options, opContext);
+                final HttpURLConnection request = TableRequest.delete(client.getTransformedEndPoint(opContext),
+                        tableName, generateRequestIdentity(isTableEntry, tableIdentity), operation.getEntity()
+                                .getEtag(), options.getTimeoutIntervalInMs(), null, options, opContext);
 
                 client.getCredentials().signRequestLite(request, -1L, opContext);
 
@@ -323,8 +323,8 @@ public class TableOperation {
             @Override
             public TableResult execute(final CloudTableClient client, final TableOperation operation,
                     final OperationContext opContext) throws Exception {
-                final HttpURLConnection request = TableRequest.insert(client.getEndpoint(), tableName,
-                        generateRequestIdentity(isTableEntry, tableIdentity),
+                final HttpURLConnection request = TableRequest.insert(client.getTransformedEndPoint(opContext),
+                        tableName, generateRequestIdentity(isTableEntry, tableIdentity),
                         operation.opType != TableOperationType.INSERT ? operation.getEntity().getEtag() : null,
                         operation.opType.getUpdateType(), options.getTimeoutIntervalInMs(), null, options, opContext);
 
@@ -410,8 +410,8 @@ public class TableOperation {
             public TableResult execute(final CloudTableClient client, final TableOperation operation,
                     final OperationContext opContext) throws Exception {
 
-                final HttpURLConnection request = TableRequest.merge(client.getEndpoint(), tableName,
-                        generateRequestIdentity(false, null), operation.getEntity().getEtag(),
+                final HttpURLConnection request = TableRequest.merge(client.getTransformedEndPoint(opContext),
+                        tableName, generateRequestIdentity(false, null), operation.getEntity().getEtag(),
                         options.getTimeoutIntervalInMs(), null, options, opContext);
 
                 client.getCredentials().signRequestLite(request, -1L, opContext);
@@ -476,8 +476,8 @@ public class TableOperation {
             public TableResult execute(final CloudTableClient client, final TableOperation operation,
                     final OperationContext opContext) throws Exception {
 
-                final HttpURLConnection request = TableRequest.update(client.getEndpoint(), tableName,
-                        generateRequestIdentity(false, null), operation.getEntity().getEtag(),
+                final HttpURLConnection request = TableRequest.update(client.getTransformedEndPoint(opContext),
+                        tableName, generateRequestIdentity(false, null), operation.getEntity().getEtag(),
                         options.getTimeoutIntervalInMs(), null, options, opContext);
 
                 client.getCredentials().signRequestLite(request, -1L, opContext);

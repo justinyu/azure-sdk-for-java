@@ -52,14 +52,14 @@ public final class SharedAccessQueuePolicy {
                 case 'r':
                     retSet.add(SharedAccessQueuePermissions.READ);
                     break;
-                case 'p':
-                    retSet.add(SharedAccessQueuePermissions.PROCESSMESSAGES);
-                    break;
                 case 'a':
                     retSet.add(SharedAccessQueuePermissions.ADD);
                     break;
                 case 'u':
                     retSet.add(SharedAccessQueuePermissions.UPDATE);
+                    break;
+                case 'p':
+                    retSet.add(SharedAccessQueuePermissions.PROCESSMESSAGES);
                     break;
                 default:
                     throw new IllegalArgumentException("value");
@@ -90,16 +90,16 @@ public final class SharedAccessQueuePolicy {
             builder.append("r");
         }
 
-        if (permissions.contains(SharedAccessQueuePermissions.PROCESSMESSAGES)) {
-            builder.append("p");
-        }
-
         if (permissions.contains(SharedAccessQueuePermissions.ADD)) {
             builder.append("a");
         }
 
         if (permissions.contains(SharedAccessQueuePermissions.UPDATE)) {
             builder.append("u");
+        }
+
+        if (permissions.contains(SharedAccessQueuePermissions.PROCESSMESSAGES)) {
+            builder.append("p");
         }
 
         return builder.toString();

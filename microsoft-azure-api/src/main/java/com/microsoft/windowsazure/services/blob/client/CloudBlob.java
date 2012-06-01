@@ -28,6 +28,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 
+import com.microsoft.windowsazure.services.blob.core.storage.SharedAccessSignatureHelper;
 import com.microsoft.windowsazure.services.core.storage.AccessCondition;
 import com.microsoft.windowsazure.services.core.storage.Constants;
 import com.microsoft.windowsazure.services.core.storage.DoesServiceRequest;
@@ -1651,7 +1652,7 @@ public abstract class CloudBlob implements ListBlobItem {
             opContext = new OperationContext();
         }
 
-        return this.generateSharedAccessSignatureCore(policy, null, opContext);
+        return this.generateSharedAccessSignature(policy, null, opContext);
     }
 
     /**
@@ -1701,7 +1702,7 @@ public abstract class CloudBlob implements ListBlobItem {
             opContext = new OperationContext();
         }
 
-        return this.generateSharedAccessSignatureCore(null, groupPolicyIdentifier, opContext);
+        return this.generateSharedAccessSignature(null, groupPolicyIdentifier, opContext);
     }
 
     /**
@@ -1727,7 +1728,7 @@ public abstract class CloudBlob implements ListBlobItem {
      * @throws StorageException
      *             If a storage service error occurred.
      */
-    private String generateSharedAccessSignatureCore(final SharedAccessBlobPolicy policy,
+    public String generateSharedAccessSignature(final SharedAccessBlobPolicy policy,
             final String groupPolicyIdentifier, OperationContext opContext) throws InvalidKeyException,
             StorageException {
         if (opContext == null) {
