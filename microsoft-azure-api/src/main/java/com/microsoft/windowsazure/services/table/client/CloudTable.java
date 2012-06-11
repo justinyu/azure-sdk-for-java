@@ -600,8 +600,7 @@ public final class CloudTable {
      */
     public String generateSharedAccessSignature(final SharedAccessTablePolicy policy,
             final String accessPolicyIdentifier, final String startPartitionKey, final String startRowKey,
-            final String endPartitionKey, final String endRowKey, OperationContext opContext)
-            throws InvalidKeyException, StorageException {
+            final String endPartitionKey, final String endRowKey) throws InvalidKeyException, StorageException {
 
         if (!this.tableServiceClient.getCredentials().canCredentialsSignRequest()) {
             final String errorMessage = "Cannot create Shared Access Signature unless the Account Key credentials are used by the BlobServiceClient.";
@@ -612,7 +611,7 @@ public final class CloudTable {
 
         final String signature = SharedAccessSignatureHelper.generateSharedAccessSignatureHash(policy,
                 accessPolicyIdentifier, resourceName, startPartitionKey, startRowKey, endPartitionKey, endRowKey,
-                this.tableServiceClient, opContext);
+                this.tableServiceClient, null);
 
         String accountKeyName = null;
         StorageCredentials credentials = this.tableServiceClient.getCredentials();

@@ -137,7 +137,7 @@ public class CloudQueueTests extends QueueTestBase {
 
     private CloudQueueClient getQueueClientForSas(CloudQueue queue, SharedAccessQueuePolicy policy,
             String accessIdentifier) throws InvalidKeyException, StorageException {
-        String sasString = queue.generateSharedAccessSignature(policy, accessIdentifier, null);
+        String sasString = queue.generateSharedAccessSignature(policy, accessIdentifier);
         return new CloudQueueClient(qClient.getEndpoint(), new StorageCredentialsSharedAccessSignature(sasString));
     }
 

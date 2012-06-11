@@ -49,7 +49,7 @@ public final class SharedAccessTablePolicy {
         for (final char c : chars) {
             switch (c) {
                 case 'r':
-                    retSet.add(SharedAccessTablePermissions.QUREY);
+                    retSet.add(SharedAccessTablePermissions.QUERY);
                     break;
                 case 'a':
                     retSet.add(SharedAccessTablePermissions.ADD);
@@ -85,7 +85,7 @@ public final class SharedAccessTablePolicy {
         // The service supports a fixed order => rwdl
         final StringBuilder builder = new StringBuilder();
 
-        if (permissions.contains(SharedAccessTablePermissions.QUREY)) {
+        if (permissions.contains(SharedAccessTablePermissions.QUERY)) {
             builder.append("r");
         }
 

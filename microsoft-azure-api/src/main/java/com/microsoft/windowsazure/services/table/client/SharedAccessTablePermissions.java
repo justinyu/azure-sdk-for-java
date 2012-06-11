@@ -29,7 +29,7 @@ public enum SharedAccessTablePermissions {
     /**
      * Permission to query entities granted.
      */
-    QUREY((byte) 0x1),
+    QUERY((byte) 0x1),
 
     /**
      * Permission to add entities granted.
@@ -57,8 +57,8 @@ public enum SharedAccessTablePermissions {
     protected static EnumSet<SharedAccessTablePermissions> fromByte(final byte value) {
         final EnumSet<SharedAccessTablePermissions> retSet = EnumSet.noneOf(SharedAccessTablePermissions.class);
 
-        if (value == QUREY.value) {
-            retSet.add(QUREY);
+        if (value == QUERY.value) {
+            retSet.add(QUERY);
         }
 
         if (value == ADD.value) {

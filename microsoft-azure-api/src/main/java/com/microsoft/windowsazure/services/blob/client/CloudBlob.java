@@ -1605,107 +1605,6 @@ public abstract class CloudBlob implements ListBlobItem {
     }
 
     /**
-     * Returns a shared access signature for the blob using the specified shared access policy. Note this does not
-     * contain the leading "?".
-     * 
-     * @param policy
-     *            A <code>SharedAccessPolicy</code> object that represents the access policy for the shared access
-     *            signature.
-     * @return A <code>String</code> that represents the shared access signature.
-     * 
-     * @throws IllegalArgumentException
-     *             If the credentials are unable to sign the request or if the blob is a snapshot.
-     * @throws InvalidKeyException
-     *             If the credentials are invalid.
-     * @throws StorageException
-     *             If a storage service error occurred.
-     */
-    public final String generateSharedAccessSignature(final SharedAccessBlobPolicy policy) throws InvalidKeyException,
-            StorageException {
-        return this.generateSharedAccessSignature(policy, null);
-    }
-
-    /**
-     * Returns a shared access signature for the blob using the specified shared access policy and operation context.
-     * Note this does not contain the leading "?".
-     * 
-     * @param policy
-     *            A <code>SharedAccessPolicy</code> object that represents the access policy for the shared access
-     *            signature.
-     * @param opContext
-     *            An {@link OperationContext} object that represents the context for the current operation. This object
-     *            is used to track requests to the storage service, and to provide additional runtime information about
-     *            the operation.
-     * 
-     * @return A <code>String</code> that represents the shared access signature.
-     * 
-     * @throws IllegalArgumentException
-     *             If the credentials are unable to sign the request or if the blob is a snapshot.
-     * @throws InvalidKeyException
-     *             If the credentials are invalid.
-     * @throws StorageException
-     *             If a storage service error occurred.
-     */
-    public final String generateSharedAccessSignature(final SharedAccessBlobPolicy policy, OperationContext opContext)
-            throws InvalidKeyException, StorageException {
-        if (opContext == null) {
-            opContext = new OperationContext();
-        }
-
-        return this.generateSharedAccessSignature(policy, null, opContext);
-    }
-
-    /**
-     * Returns a shared access signature for the blob using the specified group policy identifier. Note this does not
-     * contain the leading "?".
-     * 
-     * @param groupPolicyIdentifier
-     *            A <code>String</code> that represents the container-level access policy.
-     * 
-     * @return A <code>String</code> that represents the shared access signature.
-     * 
-     * @throws IllegalArgumentException
-     *             If the credentials are unable to sign the request or if the blob is a snapshot.
-     * @throws InvalidKeyException
-     *             If the credentials are invalid.
-     * @throws StorageException
-     *             If a storage service error occurred.
-     */
-    public final String generateSharedAccessSignature(final String groupPolicyIdentifier) throws InvalidKeyException,
-            StorageException {
-        return this.generateSharedAccessSignature(groupPolicyIdentifier, null);
-    }
-
-    /**
-     * Returns a shared access signature for the blob using the specified group policy identifier and operation context.
-     * Note this does not contain the leading "?".
-     * 
-     * @param groupPolicyIdentifier
-     *            A <code>String</code> that represents the container-level access policy.
-     * @param opContext
-     *            An {@link OperationContext} object that represents the context for the current operation. This object
-     *            is used to track requests to the storage service, and to provide additional runtime information about
-     *            the operation.
-     * 
-     * @return A <code>String</code> that represents the shared access signature.
-     * 
-     * @throws IllegalArgumentException
-     *             If the credentials are unable to sign the request or if the blob is a snapshot.
-     * @throws InvalidKeyException
-     *             If the credentials are invalid.
-     * @throws StorageException
-     *             If a storage service error occurred.
-     */
-    public final String generateSharedAccessSignature(final String groupPolicyIdentifier, OperationContext opContext)
-            throws InvalidKeyException, StorageException {
-        if (opContext == null) {
-            opContext = new OperationContext();
-        }
-
-        return this.generateSharedAccessSignature(null, groupPolicyIdentifier, opContext);
-    }
-
-    /**
      * Returns a shared access signature for the blob using the specified group policy identifier and operation context.
      * Note this does not contain the leading "?".
      * 
@@ -1728,12 +1627,8 @@ public abstract class CloudBlob implements ListBlobItem {
      * @throws StorageException
      *             If a storage service error occurred.
      */
-    public String generateSharedAccessSignature(final SharedAccessBlobPolicy policy,
-            final String groupPolicyIdentifier, OperationContext opContext) throws InvalidKeyException,
-            StorageException {
-        if (opContext == null) {
-            opContext = new OperationContext();
-        }
+    public String generateSharedAccessSignature(final SharedAccessBlobPolicy policy, final String groupPolicyIdentifier)
+            throws InvalidKeyException, StorageException {
 
         if (!this.blobServiceClient.getCredentials().canCredentialsSignRequest()) {
             throw new IllegalArgumentException(
@@ -1748,7 +1643,7 @@ public abstract class CloudBlob implements ListBlobItem {
         final String resourceName = this.getCanonicalName(true);
 
         final String signature = SharedAccessSignatureHelper.generateSharedAccessSignatureHash(policy,
-                groupPolicyIdentifier, resourceName, this.blobServiceClient, opContext);
+                groupPolicyIdentifier, resourceName, this.blobServiceClient, null);
 
         final UriQueryBuilder builder = SharedAccessSignatureHelper.generateSharedAccessSignature(policy,
                 groupPolicyIdentifier, "b", signature);

@@ -1545,9 +1545,8 @@ public final class CloudQueue {
      * @throws StorageException
      * @throws IllegalArgumentException
      */
-    public String generateSharedAccessSignature(final SharedAccessQueuePolicy policy,
-            final String groupPolicyIdentifier, OperationContext opContext) throws InvalidKeyException,
-            StorageException {
+    public String generateSharedAccessSignature(final SharedAccessQueuePolicy policy, final String groupPolicyIdentifier)
+            throws InvalidKeyException, StorageException {
 
         if (!this.queueServiceClient.getCredentials().canCredentialsSignRequest()) {
             final String errorMessage = "Cannot create Shared Access Signature unless the Account Key credentials are used by the QueueServiceClient.";
@@ -1557,7 +1556,7 @@ public final class CloudQueue {
         final String resourceName = this.getSharedAccessCanonicalName();
 
         final String signature = SharedAccessSignatureHelper.generateSharedAccessSignatureHash(policy,
-                groupPolicyIdentifier, resourceName, this.queueServiceClient, opContext);
+                groupPolicyIdentifier, resourceName, this.queueServiceClient, null);
 
         final UriQueryBuilder builder = SharedAccessSignatureHelper.generateSharedAccessSignature(policy,
                 groupPolicyIdentifier, signature);

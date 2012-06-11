@@ -317,7 +317,7 @@ public class TableClientTests extends TableTestBase {
             now.add(Calendar.MINUTE, 10);
             policy1.setSharedAccessExpiryTime(now.getTime());
 
-            policy1.setPermissions(EnumSet.of(SharedAccessTablePermissions.ADD, SharedAccessTablePermissions.QUREY,
+            policy1.setPermissions(EnumSet.of(SharedAccessTablePermissions.ADD, SharedAccessTablePermissions.QUERY,
                     SharedAccessTablePermissions.UPDATE, SharedAccessTablePermissions.DELETE));
             expectedPermissions.getSharedAccessPolicies().put(UUID.randomUUID().toString(), policy1);
 
@@ -366,7 +366,7 @@ public class TableClientTests extends TableTestBase {
             now.add(Calendar.MINUTE, 10);
             policy1.setSharedAccessExpiryTime(now.getTime());
 
-            policy1.setPermissions(EnumSet.of(SharedAccessTablePermissions.ADD, SharedAccessTablePermissions.QUREY,
+            policy1.setPermissions(EnumSet.of(SharedAccessTablePermissions.ADD, SharedAccessTablePermissions.QUERY,
                     SharedAccessTablePermissions.UPDATE, SharedAccessTablePermissions.DELETE));
             expectedPermissions.getSharedAccessPolicies().put(identifier, policy1);
 
@@ -489,7 +489,7 @@ public class TableClientTests extends TableTestBase {
             now.add(Calendar.MINUTE, 10);
             policy1.setSharedAccessExpiryTime(now.getTime());
 
-            policy1.setPermissions(EnumSet.of(SharedAccessTablePermissions.ADD, SharedAccessTablePermissions.QUREY,
+            policy1.setPermissions(EnumSet.of(SharedAccessTablePermissions.ADD, SharedAccessTablePermissions.QUERY,
                     SharedAccessTablePermissions.UPDATE, SharedAccessTablePermissions.DELETE));
             expectedPermissions.getSharedAccessPolicies().put(identifier, policy1);
 
@@ -613,8 +613,8 @@ public class TableClientTests extends TableTestBase {
 
     private CloudTableClient getTableForSas(CloudTable table, SharedAccessTablePolicy policy, String accessIdentifier,
             String startPk, String startRk, String endPk, String endRk) throws InvalidKeyException, StorageException {
-        String sasString = table.generateSharedAccessSignature(policy, accessIdentifier, startPk, startRk, endPk,
-                endRk, null);
+        String sasString = table
+                .generateSharedAccessSignature(policy, accessIdentifier, startPk, startRk, endPk, endRk);
         return new CloudTableClient(this.tClient.getEndpoint(), new StorageCredentialsSharedAccessSignature(sasString));
     }
 }
