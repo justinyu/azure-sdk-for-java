@@ -257,6 +257,31 @@ public class CloudBlobContainerTests extends BlobTestBase {
     }
 
     @Test
+    public void testContainerChangeLease() throws StorageException, URISyntaxException, InterruptedException {
+        String name = "leased" + generateRandomContainerName();
+        CloudBlobContainer newContainer = bClient.getContainerReference(name);
+        newContainer.create();
+        String proposedLeaseId = UUID.randomUUID().toString();
+        String newProposedLeaseId = UUID.randomUUID().toString();
+
+        try {
+            String leaseId = newContainer.acquireLease(null, proposedLeaseId);
+            AccessCondition condition = new AccessCondition();
+            condition.setLeaseID(leaseId);
+            OperationContext operationContext1 = new OperationContext();
+            newContainer.changeLease(newProposedLeaseId, condition, null/* BlobRequestOptions */, operationContext1);
+            Assert.assertTrue(operationContext1.getLastResult().getStatusCode() == HttpURLConnection.HTTP_OK);
+        }
+        finally {
+            // cleanup
+            AccessCondition condition = new AccessCondition();
+            condition.setLeaseID(newProposedLeaseId);
+            newContainer.releaseLease(condition);
+            newContainer.deleteIfExists();
+        }
+    }
+
+    @Test
     public void testContainerBreakLease() throws StorageException, URISyntaxException, InterruptedException {
         String name = "leased" + generateRandomContainerName();
         CloudBlobContainer newContainer = bClient.getContainerReference(name);
@@ -394,6 +419,33 @@ public class CloudBlobContainerTests extends BlobTestBase {
     }
 
     @Test
+    public void testBlobLeaseChange() throws URISyntaxException, StorageException, IOException, InterruptedException {
+        final int length = 128;
+        final Random randGenerator = new Random();
+        final byte[] buff = new byte[length];
+        randGenerator.nextBytes(buff);
+
+        String blobName = "testBlob" + Integer.toString(randGenerator.nextInt(50000));
+        blobName = blobName.replace('-', '_');
+
+        final CloudBlobContainer existingContainer = bClient.getContainerReference(testSuiteContainerName);
+        final CloudBlob blobRef = existingContainer.getBlockBlobReference(blobName);
+        final BlobRequestOptions options = new BlobRequestOptions();
+
+        blobRef.upload(new ByteArrayInputStream(buff), -1, null, options, null);
+
+        // Get Lease
+        String leaseID = blobRef.acquireLease(null, null);
+
+        OperationContext operationContext = new OperationContext();
+        AccessCondition condition = new AccessCondition();
+        condition.setLeaseID(leaseID);
+        OperationContext operationContext1 = new OperationContext();
+        blobRef.changeLease(UUID.randomUUID().toString(), condition, null/* BlobRequestOptions */, operationContext1);
+        Assert.assertTrue(operationContext1.getLastResult().getStatusCode() == HttpURLConnection.HTTP_OK);
+    }
+
+    @Test
     public void testBlobLeaseRenew() throws URISyntaxException, StorageException, IOException, InterruptedException {
         final int length = 128;
         final Random randGenerator = new Random();
@@ -449,6 +501,46 @@ public class CloudBlobContainerTests extends BlobTestBase {
         try {
             CloudBlob copyBlob = newContainer.getBlockBlobReference(originalBlob.getName() + "copyed");
             copyBlob.copyFromBlob(originalBlob);
+            Thread.sleep(1000);
+            copyBlob.downloadAttributes();
+            Assert.assertNotNull(copyBlob.copyState);
+            Assert.assertNotNull(copyBlob.copyState.getCopyId());
+            Assert.assertNotNull(copyBlob.copyState.getCompletionTime());
+            Assert.assertNotNull(copyBlob.copyState.getSource());
+            Assert.assertFalse(copyBlob.copyState.getBytesCopied() == 0);
+            Assert.assertFalse(copyBlob.copyState.getTotalBytes() == 0);
+            for (final ListBlobItem blob : newContainer.listBlobs()) {
+                CloudBlob blobFromList = ((CloudBlob) blob);
+                blobFromList.downloadAttributes();
+            }
+        }
+        finally {
+            // cleanup
+            newContainer.deleteIfExists();
+        }
+    }
+
+    @Test
+    public void testCopyFromBlobFromSas() throws StorageException, URISyntaxException, IOException,
+            InterruptedException, InvalidKeyException {
+        String name = generateRandomContainerName();
+        CloudBlobContainer newContainer = bClient.getContainerReference(name);
+        newContainer.create();
+        CloudBlob originalBlob = newContainer.getBlockBlobReference("newblob");
+        originalBlob.upload(new ByteArrayInputStream(testData), testData.length);
+        SharedAccessBlobPolicy sp = createSharedAccessPolicy(
+                EnumSet.of(SharedAccessBlobPermissions.READ, SharedAccessBlobPermissions.LIST), 300);
+        BlobContainerPermissions perms = new BlobContainerPermissions();
+
+        perms.getSharedAccessPolicies().put("readperm", sp);
+        newContainer.uploadPermissions(perms);
+
+        URI blobUri = new URI(originalBlob.getUri().toString() + "?"
+                + originalBlob.generateSharedAccessSignature(null, "readperm"));
+
+        try {
+            CloudBlob copyBlob = newContainer.getBlockBlobReference(originalBlob.getName() + "copyed");
+            copyBlob.copyFromBlob(blobUri);
             Thread.sleep(1000);
             copyBlob.downloadAttributes();
             Assert.assertNotNull(copyBlob.copyState);
