@@ -38,7 +38,7 @@ import com.microsoft.windowsazure.services.core.storage.StorageCredentials;
 import com.microsoft.windowsazure.services.core.storage.StorageException;
 import com.microsoft.windowsazure.services.core.storage.utils.Utility;
 import com.microsoft.windowsazure.services.core.storage.utils.implementation.ExecutionEngine;
-import com.microsoft.windowsazure.services.core.storage.utils.implementation.LazySegmentedIterator;
+import com.microsoft.windowsazure.services.core.storage.utils.implementation.LazySegmentedIterable;
 import com.microsoft.windowsazure.services.core.storage.utils.implementation.SegmentedStorageOperation;
 import com.microsoft.windowsazure.services.core.storage.utils.implementation.StorageOperation;
 import com.microsoft.windowsazure.services.queue.client.CloudQueue;
@@ -578,7 +578,7 @@ public final class CloudTableClient extends ServiceClient {
      * account credentials of this instance.
      * 
      * @param prefix
-     *            A <String> containing the prefix to match on table names to return.
+     *            A <code>String</code> containing the prefix to match on table names to return.
      * 
      * @return
      *         An <code>Iterable</code> collection of the table names in the storage account that match the specified
@@ -601,7 +601,7 @@ public final class CloudTableClient extends ServiceClient {
      * operation.
      * 
      * @param prefix
-     *            A <String> containing the prefix to match on table names to return.
+     *            A <code>String</code> containing the prefix to match on table names to return.
      * @param options
      *            A {@link TableRequestOptions} object that specifies execution options such as retry policy and timeout
      *            settings for the operation. Specify <code>null</code> to use the request options specified on the
@@ -629,9 +629,6 @@ public final class CloudTableClient extends ServiceClient {
      * Tables</a> REST API to list the table names, using the Table service endpoint and storage account credentials of
      * this instance.
      * 
-     * @param prefix
-     *            A <String> containing the prefix to match on table names to return.
-     * 
      * @return
      *         A {@link ResultSegment} of <code>String</code> objects containing table names in the storage account.
      * 
@@ -657,7 +654,7 @@ public final class CloudTableClient extends ServiceClient {
      * account credentials of this instance.
      * 
      * @param prefix
-     *            A <String> containing the prefix to match on table names to return.
+     *            A <code>String</code> containing the prefix to match on table names to return.
      * 
      * @return
      *         A {@link ResultSegment} of <code>String</code> objects containing table names matching the prefix in the
@@ -690,7 +687,7 @@ public final class CloudTableClient extends ServiceClient {
      * operation.
      * 
      * @param prefix
-     *            A <String> containing the prefix to match on table names to return.
+     *            A <code>String</code> containing the prefix to match on table names to return.
      * @param maxResults
      *            The maximum number of table names to return in the {@link ResultSegment}. If this parameter is null,
      *            the query will list up to the maximum 1,000 results.
@@ -729,7 +726,7 @@ public final class CloudTableClient extends ServiceClient {
      * Reserved for internal use. Generates a query to list table names with the given prefix.
      * 
      * @param prefix
-     *            A <String> containing the prefix to match on table names to return.
+     *            A <code>String</code> containing the prefix to match on table names to return.
      * @return
      *         A {@link TableQuery} instance for listing table names with the specified prefix.
      */
@@ -969,7 +966,7 @@ public final class CloudTableClient extends ServiceClient {
                 }
             };
 
-            return new LazySegmentedIterator<CloudTableClient, TableQuery<T>, T>(impl, this, queryRef,
+            return new LazySegmentedIterable<CloudTableClient, TableQuery<T>, T>(impl, this, queryRef,
                     options.getRetryPolicyFactory(), opContext);
         }
         else {
@@ -993,7 +990,7 @@ public final class CloudTableClient extends ServiceClient {
                     return result;
                 }
             };
-            return new LazySegmentedIterator<CloudTableClient, TableQuery<T>, R>(impl, this, queryRef,
+            return new LazySegmentedIterable<CloudTableClient, TableQuery<T>, R>(impl, this, queryRef,
                     options.getRetryPolicyFactory(), opContext);
         }
     }

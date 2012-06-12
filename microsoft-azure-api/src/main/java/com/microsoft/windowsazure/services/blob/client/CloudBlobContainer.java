@@ -44,8 +44,8 @@ import com.microsoft.windowsazure.services.core.storage.utils.PathUtility;
 import com.microsoft.windowsazure.services.core.storage.utils.UriQueryBuilder;
 import com.microsoft.windowsazure.services.core.storage.utils.Utility;
 import com.microsoft.windowsazure.services.core.storage.utils.implementation.ExecutionEngine;
-import com.microsoft.windowsazure.services.core.storage.utils.implementation.LazySegmentedIterator;
 import com.microsoft.windowsazure.services.core.storage.utils.implementation.LeaseAction;
+import com.microsoft.windowsazure.services.core.storage.utils.implementation.LazySegmentedIterable;
 import com.microsoft.windowsazure.services.core.storage.utils.implementation.SegmentedStorageOperation;
 import com.microsoft.windowsazure.services.core.storage.utils.implementation.StorageOperation;
 
@@ -1276,7 +1276,7 @@ public final class CloudBlobContainer {
             }
         };
 
-        return new LazySegmentedIterator<CloudBlobClient, CloudBlobContainer, ListBlobItem>(impl,
+        return new LazySegmentedIterable<CloudBlobClient, CloudBlobContainer, ListBlobItem>(impl,
                 this.blobServiceClient, this, options.getRetryPolicyFactory(), opContext);
     }
 
