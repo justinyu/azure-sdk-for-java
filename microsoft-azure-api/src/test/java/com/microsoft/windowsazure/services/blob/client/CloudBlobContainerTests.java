@@ -561,6 +561,34 @@ public class CloudBlobContainerTests extends BlobTestBase {
     }
 
     @Test
+    public void testCacheControlTest() throws StorageException, URISyntaxException, IOException, InterruptedException {
+        String name = generateRandomContainerName();
+        CloudBlobContainer newContainer = bClient.getContainerReference(name);
+        newContainer.create();
+
+        CloudBlob originalBlob = newContainer.getBlockBlobReference("newblob");
+        String cacheControlValue = "max-age=31556926";
+        originalBlob.getProperties().setCacheControl(cacheControlValue);
+        originalBlob.upload(new ByteArrayInputStream(testData), testData.length);
+
+        CloudBlob blobFromGet = newContainer.getBlockBlobReference("newblob");
+        blobFromGet.downloadAttributes();
+        Assert.assertEquals(cacheControlValue, blobFromGet.getProperties().getCacheControl());
+
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        CloudBlob blobFromDonwload = newContainer.getBlockBlobReference("newblob");
+        blobFromDonwload.download(os);
+        Assert.assertEquals(cacheControlValue, blobFromDonwload.getProperties().getCacheControl());
+
+        for (ListBlobItem b : newContainer.listBlobs()) {
+            Assert.assertEquals(cacheControlValue, ((CloudBlob) b).getProperties().getCacheControl());
+        }
+
+        newContainer.delete();
+
+    }
+
+    @Test
     public void testCopyFromBlobAbortTest() throws StorageException, URISyntaxException, IOException,
             InterruptedException {
         String name = generateRandomContainerName();
